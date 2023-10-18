@@ -1,0 +1,9 @@
+chats
+id (id чата в телеге)
+table (гугл таблица с данными о работниках)
+
+
+responsibles
+id (autoincrement)
+username (ник в телеге)
+chat_id
