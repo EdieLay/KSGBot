@@ -1,11 +1,15 @@
+import csv
+import os.path
+
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 import sqlite3
 
 import app.keyboards as kb
-from app.utils.utils import (NewResponsible, RemovingResponsible, BrigadeReason, TableEditing, ReminderOff,
+from app.utils.utils import (NewResponsible, RemovingResponsible, BrigadeReason,
+                             TableEditing, ReminderOff, ChangeBDays,
                              CallbackAdminFilter, MessageAdminFilter,
                              CallbackRespFilter, MessageRespFilter,
                              refresh_responsibles)
@@ -33,8 +37,30 @@ async def reminder(message: Message):
 
 
 @adminRouter.message(Command('birthday'))
-async def birthday(message: Message):
-    await message.answer('Что вы хотите сделать?')
+async def birthday(message: Message, state: FSMContext):
+    chat_id = message.chat.id
+    path = f'files/{chat_id}.csv'
+    if not os.path.exists(path):
+        file = open(path, 'w+')
+        file_writer = csv.writer(file, delimiter=';', lineterminator='\r')
+        file_writer.writerow(['Имя Фамилия', 'Имя пользователя (без @)', 'Дата рождения (ДД.ММ.ГГГГ)'])
+        file.close()
+    file = FSInputFile(path)
+    await message.answer_document(file)
+    await message.answer('Это текущая таблица дней рождения.\n'
+                         'Скачайте её, отредактируйте и отправьте', reply_markup=kb.change_bdays)
+    await state.set_state(ChangeBDays.change)
+
+
+@adminRouter.callback_query(F.data == 'change_bdays')
+async def birthday_nochanges(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('Дни рождения остались без изменений')
+    await state.clear()
+
+@adminRouter.callback_query(F.data == 'change_bdays')
+async def change_bdays(callback: CallbackQuery):
+    await callback.answer('Таблица дней рождения не изменилась')
+
 
 # Включить напоминание
 @adminRouter.callback_query(F.data == 'reminder_on')
@@ -50,11 +76,9 @@ async def reminder_on(callback: CallbackQuery):
             con.commit()
             await callback.message.answer('Напоминание включено!')
             await callback.answer('')
-        except sqlite3.Error as er:
+        except sqlite3.Error:
             await callback.message.answer('Не удалось включить напоминание')
             await callback.answer('')
-            print('SQLite error: %s' % (' '.join(er.args)))
-            print("Exception class is: ", er.__class__)
     else:
         await callback.answer('Напоминание уже включено')
     cur.close()
@@ -67,6 +91,7 @@ async def reminder_off(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer('При отключении напоминания вся информация об ответственных и днях рождениях будет удалена!\n'
                                   'Введите "Подтверждаю", чтобы отключить напоминание\n'
                                   'Введите любое другое сообщение, чтобы отменить')
+    await callback.answer('')
     await state.set_state(ReminderOff.confirming)
 
 
@@ -100,7 +125,6 @@ async def responsible_add(callback: CallbackQuery, state: FSMContext):
 async def cancel_responsible(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.answer('Отмена назначения ответственного')
-    await callback.message.delete()
 
 
 # Установка нового ответственного
@@ -138,7 +162,6 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
     cur.close()
     con.close()
     await state.clear()
-    await callback.message.delete()
 
 
 # эту функцию можно совместить с responsible_add
@@ -147,7 +170,6 @@ async def reminder_change(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer('Отмена назначения ответственного')
     await callback.answer('')
     await state.clear()
-    await callback.message.delete()
 
 
 @adminRouter.callback_query(F.data == 'responsible_remove')
@@ -163,6 +185,7 @@ async def responsible_remove(callback: CallbackQuery, state: FSMContext):
         await callback.answer('')
     else:
         resps_kb = list(map(lambda resp: [kb.KeyboardButton(text=f'{resp[0]}')], responsibles))
+        resps_kb.append([kb.KeyboardButton(text='Отмена')])
         resps = kb.ReplyKeyboardMarkup(keyboard=resps_kb, resize_keyboard=True, one_time_keyboard=True)
         await state.set_state(RemovingResponsible.responsible)
         await callback.message.answer('Выберите пользователя', reply_markup=resps)
@@ -171,9 +194,13 @@ async def responsible_remove(callback: CallbackQuery, state: FSMContext):
 
 @adminRouter.message(RemovingResponsible.responsible)
 async def responsible_remove_confirm(message: Message, state: FSMContext):
-    await message.answer(f'Убрать из ответственных {message.text}?', reply_markup=kb.confirm)
-    await state.update_data(remove=message.text)
-    await state.set_state(RemovingResponsible.confirm)
+    if message.text.strip().lower() == 'отмена':
+        await message.answer('Отмена удаления ответственного', reply_markup=kb.ReplyKeyboardRemove())
+        await state.clear()
+    else:
+        await message.answer(f'Убрать из ответственных {message.text}?', reply_markup=kb.confirm)
+        await state.update_data(remove=message.text)
+        await state.set_state(RemovingResponsible.confirm)
 
 
 @adminRouter.callback_query(RemovingResponsible.confirm, F.data == 'confirm_yes')
@@ -196,7 +223,6 @@ async def responsible_remove_apply(callback: CallbackQuery, state: FSMContext):
     cur.close()
     con.close()
     await state.clear()
-    await callback.message.delete()
 
 
 @adminRouter.callback_query(RemovingResponsible.confirm, F.data == 'confirm_no')
@@ -204,13 +230,24 @@ async def responsible_remove_declined(callback: CallbackQuery, state: FSMContext
     await callback.message.answer('Отмена удаления ответственного', reply_markup=kb.ReplyKeyboardRemove())
     await callback.answer('')
     await state.clear()
-    await callback.message.delete()
 
 
 @adminRouter.callback_query(F.data == 'table_change')
 async def table_change(callback: CallbackQuery, state: FSMContext):
+    con = sqlite3.connect('chats.db')
+    cur = con.cursor()
+    chat_id = callback.message.chat.id
+    cur.execute(f'SELECT spreadsheet FROM chats WHERE chats.id = {chat_id}')
+    spreadsheet = (cur.fetchone())[0]
+    spreadsheet_state = ''
+    if spreadsheet == None:
+        spreadsheet_state = 'Вы ещё не добавляли таблицу'
+    else:
+        spreadsheet_state = f'Текущая таблица: {spreadsheet}'
+    cur.close()
+    con.close()
     await state.set_state(TableEditing.table)
-    await callback.message.answer('Введите ссылку на новую таблицу\nВведите "Удалить", чтобы удалить ссылку', reply_markup=kb.cancel)
+    await callback.message.answer(f'{spreadsheet_state}\nВведите ссылку на новую таблицу\nВведите "Удалить", чтобы удалить ссылку', reply_markup=kb.cancel)
     await callback.answer()
 
 
@@ -218,7 +255,6 @@ async def table_change(callback: CallbackQuery, state: FSMContext):
 async def table_cancel(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Отмена изменения таблицы')
     await state.clear()
-    await callback.message.delete()
 
 
 @adminRouter.message(TableEditing.table, F.text.strip().lower() == 'удалить')

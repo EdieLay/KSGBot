@@ -1,5 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 
+
 # клавиатура подтверждения выхода бригады
 brigade_report_kb = [
     [InlineKeyboardButton(text='✅Бригада вышла✅', callback_data='brigade_ok')],
@@ -25,4 +26,8 @@ confirm = InlineKeyboardMarkup(inline_keyboard=confirm_kb)
 
 cancel = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Отменить', callback_data='cancel')]
+])
+
+change_bdays = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Без изменений', callback_data='change_bdays')]
 ])

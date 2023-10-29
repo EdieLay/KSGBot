@@ -7,10 +7,3 @@ responsibles
 id (autoincrement)
 username (ник в телеге)
 chat_id (foreign to chats)
-
-
-birthdays
-id (autoincrement)
-name (Имя Фамилия)
-birthday (TEXT YYYY-MM-DD)
-chat_id (foreign to chats)

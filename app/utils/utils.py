@@ -29,6 +29,10 @@ class ReminderOff(StatesGroup):
     confirming = State()
 
 
+class ChangeBDays(StatesGroup):
+    change = State()
+
+
 class CallbackAdminFilter(BaseFilter):
     def __init__(self):
         super()
@@ -84,8 +88,8 @@ def refresh_responsibles():
     for resp in resps:
         username = resp[0]
         chat_id = resp[1]
-        chat_resps.setdefault(chat_id, [])
-        chat_resps[chat_id].append(username)
+        chat_resps.setdefault(chat_id, []) # дефолтная инициализация словаря пустым списком
+        chat_resps[chat_id].append(username) # добавление в список
     cur.close()
     con.close()
 

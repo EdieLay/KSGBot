@@ -2,6 +2,8 @@ from datetime import datetime
 from aiogram import Bot
 import aiogram.exceptions
 import sqlite3
+import csv
+import os.path
 
 import app.keyboards as kb
 from app.utils.utils import get_chat_resps, refresh_responsibles
@@ -9,7 +11,7 @@ from app.utils.utils import get_chat_resps, refresh_responsibles
 
 # функция отправки напоминаний
 async def brigade_report(bot: Bot):
-    if datetime.today().weekday() < 6:
+    if datetime.today().weekday() < 7:
         chat_items = get_chat_resps().items()
         for chat_id, responsibles in chat_items:
             try:
@@ -34,7 +36,29 @@ async def table_update(bot: Bot):
 
 
 async def bd_today(bot: Bot):
-    pass
+    chat_items = get_chat_resps().keys()
+    for chat_id in chat_items:
+        path = f'files/{chat_id}.csv'
+        if os.path.exists(path):
+            file = open(path)
+            file_reader = csv.reader(file, delimiter=';')
+            line_count = 0
+            for row in file_reader:
+                if line_count != 0:
+                    bday = row[2]
+                    bdaydate = datetime.strptime(bday, '%d.%m.%Y')
+                    today = datetime.today()
+                    if bdaydate.day == today.day and bdaydate.month == today.month:
+                        try:
+                            await bot.send_message(chat_id=chat_id,
+                                                   text=f'Сегодня свой день рождения празднует {row[0]} @{row[1]}!🎉\nДавайте поздравим!')
+                        except aiogram.exceptions.TelegramForbiddenError:
+                            delete_chat(chat_id)
+                            file.close()
+                            os.remove(path)
+                            break
+                line_count += 1
+            file.close()
 
 
 def delete_chat(chat_id):
