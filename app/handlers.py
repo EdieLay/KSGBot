@@ -12,7 +12,7 @@ from app.utils.utils import (NewResponsible, RemovingResponsible, BrigadeReason,
                              TableEditing, ReminderOff, ChangeBDays,
                              CallbackAdminFilter, MessageAdminFilter,
                              CallbackRespFilter, MessageRespFilter,
-                             refresh_responsibles)
+                             set_chat_answer, delete_chat_answer, add_chat_answer)
 
 
 adminRouter = Router()
@@ -74,6 +74,7 @@ async def reminder_on(callback: CallbackQuery):
         try:
             cur.execute(f'INSERT INTO chats (id) VALUES ({chat_id})')
             con.commit()
+            add_chat_answer(chat_id)
             await callback.message.answer('Напоминание включено!')
             await callback.answer('')
         except sqlite3.Error:
@@ -104,7 +105,7 @@ async def reminder_off_confirming(message: Message, state: FSMContext):
         try:
             cur.execute(f'DELETE FROM chats WHERE id = {message.chat.id}')
             con.commit()
-            refresh_responsibles()
+            delete_chat_answer(message.chat.id)
             await message.answer('Напоминание выключено!')
         except sqlite3.Error as er:
             await message.answer('Не удалось выключить напоминание!')
@@ -150,7 +151,6 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
         try:
             cur.execute(f'INSERT INTO responsibles (username, chat_id) VALUES ("{responsible}", {chat_id})')
             con.commit()
-            refresh_responsibles()
             await callback.message.answer(f'Ответственным назначен @{responsible}')
             await callback.answer('Ответственный назначен')
         except sqlite3.Error:
@@ -214,7 +214,6 @@ async def responsible_remove_apply(callback: CallbackQuery, state: FSMContext):
     try:
         cur.execute(f'DELETE FROM responsibles WHERE username = "{responsible}" AND chat_id = {chat_id}')
         con.commit()
-        refresh_responsibles()
         await callback.message.answer(f'@{responsible} удалён из ответственных', reply_markup=kb.ReplyKeyboardRemove())
         await callback.answer('Ответственный удалён')
     except sqlite3.Error:
@@ -295,6 +294,7 @@ async def table_apply(message: Message, state: FSMContext):
 async def brigade_ok(callback: CallbackQuery):
     await callback.message.reply('@realcaaap Бригада вышла на работу✅')
     await callback.answer('✅')
+    set_chat_answer(callback.message.chat.id)
 
 
 # Бригада не вышла
@@ -321,3 +321,4 @@ async def brigade_reason(message: Message, state: FSMContext):
     brigade_state = data["brigade_state"]
     await message.reply(f'@realcaaap\n{brigade_state}')
     await state.clear()
+    set_chat_answer(message.chat.id)

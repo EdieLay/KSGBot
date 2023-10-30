@@ -4,7 +4,7 @@ from aiogram.types import Message, CallbackQuery
 import sqlite3
 
 
-chat_resps = {}
+chats_answers = {}
 
 
 class NewResponsible(StatesGroup):
@@ -54,10 +54,7 @@ class CallbackRespFilter(BaseFilter):
         super()
 
     async def __call__(self, callback: CallbackQuery) -> bool:
-        print(callback.from_user.username)
-        resps = chat_resps[callback.message.chat.id]
-        print(callback.from_user.username in resps)
-        return callback.from_user.username in resps
+        return callback.from_user.username in get_responsible(callback.message.chat.id)
 
 
 class MessageRespFilter(BaseFilter):
@@ -65,10 +62,7 @@ class MessageRespFilter(BaseFilter):
         super()
 
     async def __call__(self, message: Message) -> bool:
-        print(message.from_user.username)
-        resps = chat_resps[message.chat.id]
-        print(message.from_user.username in resps)
-        return message.from_user.username in resps
+        return message.from_user.username in get_responsible(message.chat.id)
 
 
 async def is_admin(message: Message):
@@ -78,21 +72,41 @@ async def is_admin(message: Message):
     return id in ids
 
 
-def refresh_responsibles():
+def get_responsible(chat_id):
     con = sqlite3.connect('chats.db')
     cur = con.cursor()
-    cur.execute('SELECT username, chat_id FROM responsibles')
-    resps = cur.fetchall()
-    global chat_resps
-    chat_resps = {}
-    for resp in resps:
-        username = resp[0]
-        chat_id = resp[1]
-        chat_resps.setdefault(chat_id, []) # дефолтная инициализация словаря пустым списком
-        chat_resps[chat_id].append(username) # добавление в список
+    cur.execute(f'SELECT username FROM responsibles WHERE chat_id={chat_id}')
+    resps = cur.fetchone()
+    cur.close()
+    con.close()
+    return resps
+
+
+def reset_chats_answers():
+    con = sqlite3.connect('chats.db')
+    cur = con.cursor()
+    cur.execute('SELECT id FROM chats')
+    chats = cur.fetchall()
+    global chats_answers
+    chats_answers = {}
+    for chat in chats:
+        chat_id = chat[0]
+        chats_answers[chat_id] = False
     cur.close()
     con.close()
 
 
-def get_chat_resps():
-    return chat_resps
+def delete_chat_answer(chat_id):
+    chats_answers.pop(chat_id, None)
+
+
+def add_chat_answer(chat_id):
+    chats_answers[chat_id] = False
+
+
+def set_chat_answer(chat_id):
+    chats_answers[chat_id] = True
+
+
+def get_chat_answer(chat_id):
+    return chats_answers[chat_id]

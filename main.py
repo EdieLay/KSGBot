@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import app.handlers as hnd
 from app.handlers import adminRouter, respRouter
 import app.reminders as rem
-from app.utils.utils import refresh_responsibles
+from app.utils.utils import reset_chats_answers
 
 bot = Bot('6678317099:AAH850dSpV7hr-VC0GpijLoYOpiegkBcgKs')
 
@@ -43,7 +43,7 @@ async def main():
     cur.close()
     con.close()
 
-    refresh_responsibles()  # подключнеие к бд и занесение в список всех ответственных
+    reset_chats_answers()
 
     dp = Dispatcher()
     dp.include_router(adminRouter)
@@ -51,12 +51,12 @@ async def main():
     await set_commands()
 
     scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
-    scheduler.add_job(rem.brigade_report, trigger='cron', hour='10-18', start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(rem.table_update, trigger='cron', day_of_week='thu', hour=10, minute=30, start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(rem.bd_today, trigger='cron', hour=9, minute=0, start_date=datetime.now(), kwargs={'bot': bot})
-    #scheduler.add_job(rem.brigade_report, trigger='date', run_date=datetime.now() + timedelta(seconds=10), kwargs={'bot': bot})
-    #scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
-    #scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
+    #scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', minute='0-59', start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(rem.table_update, trigger='cron', day_of_week='thu', hour=11, minute=0, start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(rem.bd_today, trigger='cron', hour=10, minute=0, start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(rem.brigade_report, trigger='date', run_date=datetime.now() + timedelta(seconds=10), kwargs={'bot': bot})
+    scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
+    scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
     scheduler.start()
     await dp.start_polling(bot)
 
