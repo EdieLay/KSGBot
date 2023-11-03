@@ -76,9 +76,8 @@ def get_responsible(chat_id):
     con = sqlite3.connect('chats.db')
     cur = con.cursor()
     cur.execute(f'SELECT username FROM responsibles WHERE chat_id={chat_id}')
-    resps = cur.fetchone()
-    if not bool(resps):
-        resps = []
+    rows = cur.fetchall()
+    resps = list(map(lambda row: row[0], rows))
     cur.close()
     con.close()
     return resps
