@@ -2,6 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import sqlite3
+import os
 from datetime import datetime, timedelta
 
 import app.handlers as hnd
@@ -49,6 +50,9 @@ async def main():
     dp.include_router(adminRouter)
     dp.include_router(respRouter)
     await set_commands()
+
+    if not os.path.exists('files'):
+        os.mkdir('files')
 
     scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
     #scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', minute='0-59', start_date=datetime.now(), kwargs={'bot': bot})

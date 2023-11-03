@@ -31,3 +31,8 @@ cancel = InlineKeyboardMarkup(inline_keyboard=[
 change_bdays = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Без изменений', callback_data='change_bdays')]
 ])
+
+cancel_table = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Отменить', callback_data='cancel_table'),
+     InlineKeyboardButton(text='Удалить', callback_data='delete_table')]
+])

@@ -77,6 +77,8 @@ def get_responsible(chat_id):
     cur = con.cursor()
     cur.execute(f'SELECT username FROM responsibles WHERE chat_id={chat_id}')
     resps = cur.fetchone()
+    if not bool(resps):
+        resps = []
     cur.close()
     con.close()
     return resps
@@ -110,3 +112,13 @@ def set_chat_answer(chat_id):
 
 def get_chat_answer(chat_id):
     return chats_answers[chat_id]
+
+
+def check_reminder_is_on(chat_id):
+    con = sqlite3.connect('chats.db')
+    cur = con.cursor()
+    cur.execute(f'SELECT * FROM chats where id = {chat_id}')
+    rows = cur.fetchall()
+    cur.close()
+    con.close()
+    return bool(len(rows))

@@ -22,11 +22,13 @@ async def brigade_report(bot: Bot):
             if len(resps) == 0:
                 message = ('Вы включили напоминание, но не добавили ответственных. '
                            'Пожалуйста, сделайте это через команду /reminder')
+                reply_markup = None
             else:
                 message = (f'@{" @".join(resps)}\n'
                            f'Уточните, пожалуйста, все ли рабочие вышли сегодня на объект?\n')
+                reply_markup = kb.brigade_report
             try:
-                await bot.send_message(chat_id=chat_id, text=message, reply_markup=kb.brigade_report)
+                await bot.send_message(chat_id=chat_id, text=message, reply_markup=reply_markup)
             except aiogram.exceptions.TelegramForbiddenError:
                 delete_chat(chat_id)
     cur.close()
