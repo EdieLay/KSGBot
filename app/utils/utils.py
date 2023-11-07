@@ -1,6 +1,7 @@
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import BaseFilter
 from aiogram.types import Message, CallbackQuery
+import aiogram.exceptions
 import sqlite3
 
 
@@ -67,7 +68,12 @@ class MessageRespFilter(BaseFilter):
 
 async def is_admin(message: Message):
     id = message.from_user.id
-    admins = await message.chat.get_administrators()
+    chat_id = message.chat.id
+    try:
+        admins = await message.chat.get_administrators()
+    except aiogram.exceptions.TelegramForbiddenError:
+        delete_chat(chat_id)
+        return False
     ids = list(map(lambda admin: admin.user.id, admins))
     return id in ids
 
@@ -121,3 +127,18 @@ def check_reminder_is_on(chat_id):
     cur.close()
     con.close()
     return bool(len(rows))
+
+
+def delete_chat(chat_id):
+    con = sqlite3.connect('chats.db')
+    cur = con.cursor()
+    con.execute('PRAGMA foreign_keys = ON')
+    try:
+        cur.execute(f'DELETE FROM chats WHERE id = {chat_id}')
+        con.commit()
+        delete_chat_answer(chat_id)
+    except sqlite3.Error as er:
+        print('SQLite error: %s' % (' '.join(er.args)))
+        print("Exception class is: ", er.__class__)
+    cur.close()
+    con.close()

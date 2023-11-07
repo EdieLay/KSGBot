@@ -6,7 +6,7 @@ import csv
 import os.path
 
 import app.keyboards as kb
-from app.utils.utils import get_chat_answer, get_responsible, delete_chat_answer
+from app.utils.utils import get_chat_answer, get_responsible, delete_chat_answer, delete_chat
 
 
 # функция отправки напоминаний
@@ -85,16 +85,4 @@ async def bd_today(bot: Bot):
     con.close()
 
 
-def delete_chat(chat_id):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
-    con.execute('PRAGMA foreign_keys = ON')
-    try:
-        cur.execute(f'DELETE FROM chats WHERE id = {chat_id}')
-        con.commit()
-        delete_chat_answer(chat_id)
-    except sqlite3.Error as er:
-        print('SQLite error: %s' % (' '.join(er.args)))
-        print("Exception class is: ", er.__class__)
-    cur.close()
-    con.close()
+

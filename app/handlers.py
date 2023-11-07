@@ -93,9 +93,9 @@ async def reminder_off(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer('Напоминание ещё не было включено.')
         await callback.answer('')
     else:
-        await callback.message.answer('При отключении напоминания вся информация об ответственных и днях рождениях будет удалена!\n'
-                                      'Введите "Подтверждаю", чтобы отключить напоминание\n'
-                                      'Введите любое другое сообщение, чтобы отменить')
+        await callback.message.answer('При отключении напоминания вся информация об ответственных и днях рождения будет удалена!\n'
+                                      'Введите "Подтверждаю", чтобы отключить напоминание.\n'
+                                      'Введите любое другое сообщение, чтобы отменить.')
         await callback.answer('')
         await state.set_state(ReminderOff.confirming)
 
@@ -307,7 +307,7 @@ async def table_apply(message: Message, state: FSMContext):
 # Бригада вышла
 @respRouter.callback_query(F.data == 'brigade_ok')
 async def brigade_ok(callback: CallbackQuery):
-    await callback.message.reply('@realcaaap Бригада вышла на работу✅')
+    await callback.message.reply('@SvetlanaD007 Бригада вышла на работу✅')
     await callback.answer('✅')
     set_chat_answer(callback.message.chat.id)
 
@@ -334,6 +334,6 @@ async def brigade_part(callback: CallbackQuery, state: FSMContext):
 async def brigade_reason(message: Message, state: FSMContext):
     data = await state.get_data()
     brigade_state = data["brigade_state"]
-    await message.reply(f'@realcaaap\n{brigade_state}')
+    await message.reply(f'@SvetlanaD007\n{brigade_state}')
     await state.clear()
     set_chat_answer(message.chat.id)
