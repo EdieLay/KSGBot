@@ -28,7 +28,9 @@ respRouter.message.filter(MessageRespFilter())
 # запуск бота
 @adminRouter.message(Command('start'))
 async def start(message: Message):
-    await message.answer(f'Приветствую, {message.chat.title}')
+    await message.answer('Приветствую! Я буду помогать вам в процессе работы.\n'
+                         'Чтобы узнать, что я умею, и научиться мной пользоваться, рекомендую прочитать это руководство:\n'
+                         'https://docs.google.com/document/d/1v-wX0_TtcC3fD0X6VENdPqxQh8pVZlPM3QLp1vXdhsI/edit?usp=sharing')
 
 
 # Меню напоминания
