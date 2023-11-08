@@ -42,7 +42,7 @@ async def birthday(message: Message, state: FSMContext):
     chat_id = message.chat.id
     path = f'files/{chat_id}.csv'
     if not os.path.exists(path):
-        file = open(path, 'w+')
+        file = open(path, 'w+', encoding='cp1251', errors='replace')
         file_writer = csv.writer(file, delimiter=';', lineterminator='\r')
         file_writer.writerow(['Имя Фамилия', 'Имя пользователя (без @)', 'Дата рождения (ДД.ММ.ГГГГ)'])
         file.close()
