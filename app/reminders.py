@@ -62,7 +62,7 @@ async def bd_today(bot: Bot):
         chat_id = chat[0]
         path = f'files/{chat_id}.csv'
         if os.path.exists(path):
-            file = open(path)
+            file = open(path, encoding='cp1251')
             file_reader = csv.reader(file, delimiter=';')
             line_count = 0
             for row in file_reader:
