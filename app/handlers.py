@@ -24,11 +24,13 @@ respRouter = Router()
 respRouter.callback_query.filter(CallbackRespFilter())
 respRouter.message.filter(MessageRespFilter())
 
+controller = '@SvetlanaD007'
+
 
 # запуск бота
 @adminRouter.message(Command('start'))
 async def start(message: Message):
-    await message.answer('Приветствую! Я буду помогать вам в процессе работы.\n'
+    await message.answer('Приветствую! Я буду помогать вам в процессе работы!\n'
                          'Чтобы узнать, что я умею, и научиться мной пользоваться, рекомендую прочитать это руководство:\n'
                          'https://docs.google.com/document/d/1v-wX0_TtcC3fD0X6VENdPqxQh8pVZlPM3QLp1vXdhsI/edit?usp=sharing')
 
@@ -37,6 +39,11 @@ async def start(message: Message):
 @adminRouter.message(Command('reminder'))
 async def reminder(message: Message):
     await message.answer('Что нужно сделать с напоминанием?', reply_markup=kb.reminder)
+
+
+@respRouter.message(Command('brigadeok'))
+async def brigadeok(message: Message):
+    await message.answer(f'{controller} Бригады вышли на работу✅')
 
 
 @adminRouter.message(Command('birthday'))
@@ -55,14 +62,10 @@ async def birthday(message: Message, state: FSMContext):
     await state.set_state(ChangeBDays.change)
 
 
-@adminRouter.callback_query(F.data == 'change_bdays')
+@adminRouter.callback_query(F.data == 'bdays_not_changed')
 async def birthday_nochanges(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Дни рождения остались без изменений')
     await state.clear()
-
-@adminRouter.callback_query(F.data == 'change_bdays')
-async def change_bdays(callback: CallbackQuery):
-    await callback.answer('Таблица дней рождения не изменилась')
 
 
 # Включить напоминание
@@ -113,7 +116,7 @@ async def reminder_off_confirming(message: Message, state: FSMContext):
             con.commit()
             delete_chat_answer(message.chat.id)
             await message.answer('Напоминание выключено!')
-        except sqlite3.Error as er:
+        except sqlite3.Error:
             await message.answer('Не удалось выключить напоминание!')
         cur.close()
         con.close()
@@ -309,7 +312,7 @@ async def table_apply(message: Message, state: FSMContext):
 # Бригада вышла
 @respRouter.callback_query(F.data == 'brigade_ok')
 async def brigade_ok(callback: CallbackQuery):
-    await callback.message.reply('@SvetlanaD007 Бригада вышла на работу✅')
+    await callback.message.reply(f'{controller} Бригады вышли на работу✅')
     await callback.answer('✅')
     set_chat_answer(callback.message.chat.id)
 
@@ -317,18 +320,35 @@ async def brigade_ok(callback: CallbackQuery):
 # Бригада не вышла
 @respRouter.callback_query(F.data == 'brigade_fail')
 async def brigade_fail(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BrigadeReason.reason)
-    await state.update_data(brigade_state='Бригада НЕ вышла на работу❌')
-    await callback.message.answer('Укажите причину в своём следующем сообщении')
+    await state.set_state(BrigadeReason.will_come)
+    await state.update_data(brigade_state='Бригады НЕ вышли на объект❌')
+    await callback.message.answer('Выйдут ли сегодня бригады на объект?', reply_markup=kb.confirm)
     await callback.answer('')
 
 
 # бригада вышла не в полном составе
 @respRouter.callback_query(F.data == 'brigade_part')
 async def brigade_part(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BrigadeReason.will_come)
+    await state.update_data(brigade_state='Бригады вышли на объект в неполном составе⚠️')
+    await callback.message.answer('Выйдут ли сегодня бригады на объект?', reply_markup=kb.confirm)
+    await callback.answer('')
+
+
+@respRouter.callback_query(BrigadeReason.will_come, F.data == 'confirm_yes')
+async def brigade_will_come(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BrigadeReason.reason)
-    await state.update_data(brigade_state='Бригада вышла на работу в неполном составе⚠️')
-    await callback.message.answer('Укажите причину в своём следующем сообщении')
+    await state.update_data(brigade_coming='Бригады выйдут в полном составе на объект в указанное время.')
+    await callback.message.answer('Укажите причину и время выхода в своём следующем сообщении.\n'
+                                  'Не забудьте использовать команду /brigadeok, когда все бригады выйдут!')
+    await callback.answer('')
+
+
+@respRouter.callback_query(BrigadeReason.will_come, F.data == 'confirm_no')
+async def brigade_will_not_come(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BrigadeReason.reason)
+    await state.update_data(brigade_coming='Бригады НЕ выйдут на объект!')
+    await callback.message.answer('Укажите причину невыхода в своём следующем сообщении.')
     await callback.answer('')
 
 
@@ -336,6 +356,7 @@ async def brigade_part(callback: CallbackQuery, state: FSMContext):
 async def brigade_reason(message: Message, state: FSMContext):
     data = await state.get_data()
     brigade_state = data["brigade_state"]
-    await message.reply(f'@SvetlanaD007\n{brigade_state}')
+    brigade_coming = data["brigade_coming"]
+    await message.reply(f'{controller}\n{brigade_state}\n{brigade_coming}')
     await state.clear()
     set_chat_answer(message.chat.id)

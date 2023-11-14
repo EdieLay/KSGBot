@@ -19,6 +19,7 @@ class RemovingResponsible(StatesGroup):
 
 
 class BrigadeReason(StatesGroup):
+    will_come = State()
     reason = State()
 
 

@@ -10,7 +10,8 @@ from app.handlers import adminRouter, respRouter
 import app.reminders as rem
 from app.utils.utils import reset_chats_answers
 
-bot = Bot('6678317099:AAH850dSpV7hr-VC0GpijLoYOpiegkBcgKs')
+# bot = Bot('6678317099:AAH850dSpV7hr-VC0GpijLoYOpiegkBcgKs')  # release
+bot = Bot('6918424612:AAFfcmvsTNnVc1FFz908PgLuowo9Djzo62c')  # dev
 
 
 @adminRouter.message(hnd.F.document, hnd.ChangeBDays.change)
@@ -30,6 +31,7 @@ async def set_commands():
         types.BotCommand(command='start', description='Начальная установка'),
         types.BotCommand(command='reminder', description='Управление напоминаниями'),
         types.BotCommand(command='birthday', description='Управление днями рождения'),
+        types.BotCommand(command='brigadeok', description='Сообщить о выходе бригад')
     ]
     await bot.set_my_commands(commands, types.BotCommandScopeDefault())
 
@@ -55,13 +57,13 @@ async def main():
         os.mkdir('files')
 
     scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
-    scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', hour='10-23', start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(rem.table_update, trigger='cron', day_of_week='thu', hour=11, minute=0, start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(rem.bd_today, trigger='cron', hour=10, minute=10, start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(reset_chats_answers, trigger='cron', hour=1, minute=0, start_date=datetime.now())
-    #scheduler.add_job(rem.brigade_report, trigger='date', run_date=datetime.now() + timedelta(seconds=10), kwargs={'bot': bot})
-    #scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
-    #scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
+    #scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', hour='10-23', start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(rem.table_update, trigger='cron', day_of_week='thu', hour=11, minute=0, start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(rem.bd_today, trigger='cron', hour=10, minute=10, start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(reset_chats_answers, trigger='cron', hour=1, minute=0, start_date=datetime.now())
+    scheduler.add_job(rem.brigade_report, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
+    scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=10), kwargs={'bot': bot})
+    scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
     #scheduler.add_job(reset_chats_answers, trigger='date', run_date=datetime.now() + timedelta(seconds=5))
     scheduler.start()
 
