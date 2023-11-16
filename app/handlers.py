@@ -13,6 +13,7 @@ from app.utils.utils import (NewResponsible, RemovingResponsible, BrigadeReason,
                              CallbackAdminFilter, MessageAdminFilter,
                              CallbackRespFilter, MessageRespFilter,
                              set_chat_answer, delete_chat_answer, add_chat_answer,
+                             set_chat_table_answer, delete_chat_table_answer, add_chat_table_answer,
                              check_reminder_is_on, get_responsible)
 
 
@@ -77,6 +78,7 @@ async def reminder_on(callback: CallbackQuery):
             cur.execute(f'INSERT INTO chats (id) VALUES ({chat_id})')
             con.commit()
             add_chat_answer(chat_id)
+            add_chat_table_answer(chat_id)
             await callback.message.edit_text('✅Напоминание включено✅', reply_markup=kb.reminder)
             await callback.answer('Напоминание включено')
             cur.close()
@@ -120,6 +122,7 @@ async def reminder_off_confirming(message: Message, state: FSMContext):
             cur.execute(f'DELETE FROM chats WHERE id = {message.chat.id}')
             con.commit()
             delete_chat_answer(message.chat.id)
+            delete_chat_table_answer(message.chat.id)
             await message.answer('Напоминание выключено!')
         except sqlite3.Error:
             await message.answer('Не удалось выключить напоминание!')
@@ -367,3 +370,10 @@ async def brigade_reason(message: Message, state: FSMContext):
     await message.reply(f'{controller}\n{brigade_state}\n{brigade_coming}')
     await state.clear()
     set_chat_answer(message.chat.id)
+
+
+@respRouter.callback_query(F.data == 'table_updated')
+async def table_updated(callback: CallbackQuery):
+    await callback.message.answer(f'{controller}\nТаблица обновлена!✅')
+    await callback.answer('')
+    set_chat_table_answer(callback.message.chat.id)

@@ -36,3 +36,7 @@ cancel_table = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Отменить', callback_data='cancel_table'),
      InlineKeyboardButton(text='Удалить таблицу', callback_data='delete_table')]
 ])
+
+table_reminder = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Таблица обновлена', callback_data='table_updated')]
+])

@@ -6,7 +6,7 @@ import csv
 import os.path
 
 import app.keyboards as kb
-from app.utils.utils import get_chat_answer, get_responsible, delete_chat_answer, delete_chat
+from app.utils.utils import get_chat_answer, get_responsible, delete_chat, get_chat_table_answer
 
 
 # функция отправки напоминаний
@@ -43,12 +43,18 @@ async def table_update(bot: Bot):
     for chat in chats:
         chat_id = chat[0]
         spreadsheet = chat[1]
-        resps = get_responsible(chat_id)
-        if spreadsheet != None and len(resps) > 0:
-            try:
-                await bot.send_message(chat_id=chat_id, text=f'@{" @".join(resps)}\nОбновите список сотрудников на объекте\nДедлайн сегодня до 18:00\n{spreadsheet}')
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+        if not get_chat_table_answer(chat_id):
+            resps = get_responsible(chat_id)
+            if spreadsheet != None and len(resps) > 0:
+                try:
+                    await bot.send_message(chat_id=chat_id, text=f'@{" @".join(resps)}\n'
+                                                                 f'Добрый день!😊\n'
+                                                                 f'Прошу обновить списки сотрудников на объекте.\n'
+                                                                 f'Дедлайн сегодня до 18:00🕰\n'
+                                                                 f'Напоминание будет приходить каждые два часа, пока не нажата кнопка "Таблица обновлена".\n'
+                                                                 f'{spreadsheet}', reply_markup=kb.table_reminder)
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
     cur.close()
     con.close()
 

@@ -6,6 +6,7 @@ import sqlite3
 
 
 chats_answers = {}
+chats_table_answers = {}
 
 
 class NewResponsible(StatesGroup):
@@ -96,10 +97,13 @@ def reset_chats_answers():
     cur.execute('SELECT id FROM chats')
     chats = cur.fetchall()
     global chats_answers
+    global chats_table_answers
     chats_answers = {}
+    chats_table_answers = {}
     for chat in chats:
         chat_id = chat[0]
         chats_answers[chat_id] = False
+        chats_table_answers[chat_id] = False
     cur.close()
     con.close()
 
@@ -118,6 +122,22 @@ def set_chat_answer(chat_id):
 
 def get_chat_answer(chat_id):
     return chats_answers[chat_id]
+
+
+def delete_chat_table_answer(chat_id):
+    chats_table_answers.pop(chat_id, None)
+
+
+def add_chat_table_answer(chat_id):
+    chats_table_answers[chat_id] = False
+
+
+def set_chat_table_answer(chat_id):
+    chats_table_answers[chat_id] = True
+
+
+def get_chat_table_answer(chat_id):
+    return chats_table_answers[chat_id]
 
 
 def check_reminder_is_on(chat_id):
