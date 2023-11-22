@@ -371,6 +371,7 @@ async def brigade_will_come(callback: CallbackQuery, state: FSMContext):
                                   f'{brig_reason}')
     await callback.answer('')
     await state.clear()
+    set_chat_answer(callback.message.chat.id)
 
 
 @respRouter.callback_query(BrigadeReason.will_come, F.data == 'confirm_no')
@@ -383,6 +384,7 @@ async def brigade_will_not_come(callback: CallbackQuery, state: FSMContext):
                                   f'{brig_reason}')
     await callback.answer('')
     await state.clear()
+    set_chat_answer(callback.message.chat.id)
 
 
 @respRouter.callback_query(F.data == 'table_updated')
