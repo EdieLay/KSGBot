@@ -22,6 +22,7 @@ class RemovingResponsible(StatesGroup):
 class BrigadeReason(StatesGroup):
     will_come = State()
     reason = State()
+    partly_reason = State()
 
 
 class TableEditing(StatesGroup):

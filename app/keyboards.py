@@ -4,7 +4,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 # клавиатура подтверждения выхода бригады
 brigade_report_kb = [
     [InlineKeyboardButton(text='✅Бригады вышли✅', callback_data='brigade_ok')],
-    [InlineKeyboardButton(text='⚠️Бригады вышли не в полном составе⚠️', callback_data='brigade_part')],
+    [InlineKeyboardButton(text='⚠️Бригада(ы) вышла(и) в неполном составе⚠️', callback_data='brigade_part')],
     [InlineKeyboardButton(text='❌Бригады не вышли❌', callback_data='brigade_fail')]
 ]
 brigade_report = InlineKeyboardMarkup(inline_keyboard=brigade_report_kb)
