@@ -40,3 +40,8 @@ cancel_table = InlineKeyboardMarkup(inline_keyboard=[
 table_reminder = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Таблица обновлена', callback_data='table_updated')]
 ])
+
+remind_later_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Да', callback_data='remind_later_yes')],
+    [InlineKeyboardButton(text='Нет', callback_data='remind_later_no')]
+])

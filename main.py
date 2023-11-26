@@ -3,15 +3,13 @@ from aiogram import Bot, Dispatcher, types
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import sqlite3
 import os
-from datetime import datetime, timedelta
 
 import app.handlers as hnd
 from app.handlers import adminRouter, respRouter
-import app.reminders as rem
 from app.utils.utils import reset_chats_answers
+from app.scheduler import add_default_jobs, start_scheduler, add_dev_jobs
 
-
-version = 'dev'
+version = 'release'
 if 'release' == version:
     bot = Bot('6678317099:AAH850dSpV7hr-VC0GpijLoYOpiegkBcgKs')  # release
 else:
@@ -50,8 +48,6 @@ async def main():
     cur.close()
     con.close()
 
-    reset_chats_answers()
-
     dp = Dispatcher()
     dp.include_router(adminRouter)
     dp.include_router(respRouter)
@@ -60,17 +56,12 @@ async def main():
     if not os.path.exists('files'):
         os.mkdir('files')
 
-    scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
     if 'release' == version:
-        scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', hour='10-23', start_date=datetime.now(), kwargs={'bot': bot})
-        scheduler.add_job(rem.table_update, trigger='cron', day_of_week='thu', hour='11-18/2', start_date=datetime.now(), kwargs={'bot': bot})
-        scheduler.add_job(rem.bd_today, trigger='cron', hour=10, minute=10, start_date=datetime.now(), kwargs={'bot': bot})
-        scheduler.add_job(reset_chats_answers, trigger='cron', hour=1, minute=0, start_date=datetime.now())
+        add_default_jobs(bot)
     else:
-        scheduler.add_job(rem.brigade_report, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
-        #scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=10), kwargs={'bot': bot})
-        #scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
-    scheduler.start()
+        reset_chats_answers()
+        add_dev_jobs(bot)
+    start_scheduler()
 
     await dp.start_polling(bot)
 

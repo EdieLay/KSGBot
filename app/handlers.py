@@ -8,13 +8,14 @@ from aiogram.fsm.context import FSMContext
 import sqlite3
 
 import app.keyboards as kb
+from app.scheduler import add_brigade_planning_reminder
 from app.utils.queries import execute_query
-from app.utils.states import (NewResponsible, RemovingResponsible, BrigadeReason,
+from app.utils.states import (NewResponsible, RemovingResponsible, BrigadePartly, BrigadeFail,
                               TableEditing, ReminderOff, ChangeBDays)
 from app.utils.filters import (CallbackAdminFilter, MessageAdminFilter,
                                CallbackRespFilter, MessageRespFilter)
-from app.utils.utils import (set_chat_answer, delete_chat_answer, add_chat_answer,
-                             set_chat_table_answer, delete_chat_table_answer, add_chat_table_answer,
+from app.utils.utils import (set_brigade_answer,
+                             set_table_answer,
                              check_reminder_is_on, get_responsible)
 
 
@@ -75,8 +76,6 @@ async def reminder_on(callback: CallbackQuery):
     if not check_reminder_is_on(chat_id):
         try:
             execute_query(f'INSERT INTO chats (id) VALUES ({chat_id})')
-            add_chat_answer(chat_id)
-            add_chat_table_answer(chat_id)
             await callback.message.edit_text('✅Напоминание включено✅', reply_markup=kb.reminder)
             await callback.answer('Напоминание включено')
         except sqlite3.Error:
@@ -113,8 +112,6 @@ async def reminder_off_confirming(message: Message, state: FSMContext):
     if message.text.strip().lower() == 'подтверждаю':
         try:
             execute_query(f'DELETE FROM chats WHERE id = {message.chat.id}')
-            delete_chat_answer(message.chat.id)
-            delete_chat_table_answer(message.chat.id)
             await message.answer('Напоминание выключено!')
         except sqlite3.Error:
             await message.answer('Не удалось выключить напоминание!')
@@ -126,7 +123,7 @@ async def reminder_off_confirming(message: Message, state: FSMContext):
 async def responsible_add(callback: CallbackQuery, state: FSMContext):
     chat_id = callback.message.chat.id
     if check_reminder_is_on(chat_id):
-        await callback.message.edit_text('Введите имя пользователя нового ответственного', reply_markup=kb.cancel)
+        await callback.message.edit_text('Введите имя пользователя нового ответственного (без @)', reply_markup=kb.cancel)
         await callback.answer('')
         await state.set_state(NewResponsible.responsible)
     else:
@@ -284,60 +281,153 @@ async def table_apply(message: Message, state: FSMContext):
 async def brigade_ok(callback: CallbackQuery):
     await callback.message.edit_text(f'{controller}\nБригады вышли на работу✅')
     await callback.answer('✅')
-    set_chat_answer(callback.message.chat.id)
+    set_brigade_answer(callback.message.chat.id)
 
 
-# Бригада не вышла
+# Бригады не вышли -> укажите причину
 @respRouter.callback_query(F.data == 'brigade_fail')
 async def brigade_fail(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BrigadeReason.reason)
-    await state.update_data(brigade_state='Бригады НЕ вышли на объект❌')
-    await callback.message.edit_text('Укажите бригады и причину.')
+    await callback.message.edit_text('Укажите бригады и причину(ы) невыхода.')
     await callback.answer('')
+    await state.set_state(BrigadeFail.reason)
 
 
-# Готовое сообщение, если бригады не вышли
-@respRouter.message(BrigadeReason.reason)
-async def brigade_reason(message: Message, state: FSMContext):
+# Получена причина -> планируют ли выходить?
+@respRouter.message(BrigadeFail.reason)
+async def brigade_fail_reason(message: Message, state: FSMContext):
+    await state.update_data(brigade_reason=message.text)
+    await message.answer('Планируют ли бригады выходить?', reply_markup=kb.confirm)
+    await state.set_state(BrigadeFail.planning)
+
+
+# Планируют выходить -> укажите дату
+@respRouter.callback_query(BrigadeFail.planning, F.data == 'confirm_yes')
+async def brigade_fail_planning(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('Укажите дату выхода бригад.')
+    await callback.answer('')
+    await state.set_state(BrigadeFail.planning_date)
+
+
+# Указана дата выхода -> сообщение Светлане
+@respRouter.message(BrigadeFail.planning_date)
+async def brigade_fail_planning_date(message: Message, state: FSMContext):
     data = await state.get_data()
-    brig_state = data["brigade_state"]
-    await message.answer(f'{controller}\n{brig_state}\n\nПричина:\n{message.text}')
+    brigade_reason = data['brigade_reason']
+    await message.answer(f'{controller}\n'
+                         f'Бригады НЕ вышли на объект❌\n\n'
+                         f'Причина:\n'
+                         f'{brigade_reason}\n\n'
+                         f'Дата выхода:\n'
+                         f'{message.text}')
+    set_brigade_answer(message.chat.id)
     await state.clear()
-    set_chat_answer(message.chat.id)
 
 
-@respRouter.callback_query(F.data == 'brigade_part')
-async def brigade_part(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BrigadeReason.partly_reason)
-    await state.update_data(brigade_state='Бригада(ы) вышла(и) на объект в неполном составе⚠️')
-    await callback.message.edit_text('Укажите бригаду(ы) и причину.')
+# Не планируют выходить -> укажите причину
+@respRouter.callback_query(BrigadeFail.planning, F.data == 'confirm_no')
+async def brigade_fail_not_planning(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('Укажите причину, почему не планируют выходить.')
     await callback.answer('')
+    await state.set_state(BrigadeFail.not_planning_reason)
 
 
-@respRouter.message(BrigadeReason.partly_reason)
+# Получена причина -> укажите дальнейшие действия
+@respRouter.message(BrigadeFail.not_planning_reason)
+async def brigade_fail_not_planning_reason(message: Message, state: FSMContext):
+    await state.update_data(brigade_not_planning_reason=message.text)
+    await message.answer('Укажите ваши дальнейшие действия по решению проблемы.')
+    await state.set_state(BrigadeFail.further_actions)
+
+
+# Получены дальнейшие действия -> сообщение Светлане
+@respRouter.message(BrigadeFail.further_actions)
+async def brigade_fail_further_actions(message: Message, state: FSMContext):
+    data = await state.get_data()
+    brigade_reason = data['brigade_reason']
+    brigade_not_planning_reason = data['brigade_not_planning_reason']
+    await message.answer(f'{controller}\n'
+                         f'Бригады НЕ вышли на объект❌\n\n'
+                         f'Бригады и причины:\n'
+                         f'{brigade_reason}\n\n'
+                         f'Не планируют выходить:\n'
+                         f'{brigade_not_planning_reason}\n\n'
+                         f'Дальнейшие действия:\n'
+                         f'{message.text}')
+    set_brigade_answer(message.chat.id)
+    await state.clear()
+
+
+# В неполном составе -> укажите бригады и причины
+@respRouter.callback_query(F.data == 'brigade_part')
+async def brigade_partly(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('Укажите бригаду(ы) и причину(ы) выхода в неполном составе.')
+    await callback.answer('')
+    await state.set_state(BrigadePartly.reason)
+
+
+# Получена причина -> планируют ли выходить сегодня?
+@respRouter.message(BrigadePartly.reason)
 async def brigade_partly_reason(message: Message, state: FSMContext):
     await state.update_data(brigade_reason=message.text)
-    await message.answer('Планирует(ют) ли бригада(ы) выходить?', reply_markup=kb.confirm)
-    await state.set_state(BrigadeReason.will_come)
+    await message.answer('Планирует(ют) ли бригада(ы) выходить сегодня?', reply_markup=kb.confirm)
+    await state.set_state(BrigadePartly.coming)
 
 
-# Бригады выйдут или не выйдут позже
-@respRouter.callback_query(BrigadeReason.will_come, F.data.in_({'confirm_yes', 'confirm_no'}))
-async def brigade_will_come(callback: CallbackQuery, state: FSMContext):
+# Не планируют выходить -> сообщение Светлане
+@respRouter.callback_query(BrigadePartly.coming, F.data == 'confirm_no')
+async def brigade_partly_not_coming(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    brig_state = data['brigade_state']
-    brig_reason = data['brigade_reason']
-    brig_coming = 'Выйдут на объект позже.' if callback.data == 'confirm_yes' else 'Сегодня на объект НЕ выйдут!'
-    await callback.message.edit_text(f'{controller}\n{brig_state}\n'
-                                  f'{brig_coming}\n\n'
-                                  f'{brig_reason}')
-    await callback.answer('')
+    brigade_reason = data['brigade_reason']
+    await callback.message.edit_text(f'{controller}\n'
+                                     f'Бригада(ы) вышла(и) на объект в неполном составе⚠️\n'
+                                     f'Сегодня на объект не выйдут\n\n'
+                                     f'Бригады и причины:\n'
+                                     f'{brigade_reason}')
+    set_brigade_answer(callback.message.chat.id)
     await state.clear()
-    set_chat_answer(callback.message.chat.id)
+
+
+# Планируют выходить -> когда?
+@respRouter.callback_query(BrigadePartly.coming, F.data == 'confirm_yes')
+async def brigade_partly_coming(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('Когда бригада обещает выйти в полном составе? Укажите предполагаемое время.')
+    await callback.answer('')
+    await state.set_state(BrigadePartly.planning)
+
+
+# Получили время выхода -> сообщение Светлане -> напоминание в 13:00
+@respRouter.message(BrigadePartly.planning)
+async def brigade_partly_planning(message: Message, state: FSMContext):
+    data = await state.get_data()
+    brigade_reason = data['brigade_reason']
+    await message.answer(f'{controller}\n'
+                         f'Бригада(ы) вышла(и) на объект в неполном составе⚠️\n'
+                         f'Выйдут на объект позже.\n\n'
+                         f'Бригады и причины:\n'
+                         f'{brigade_reason}\n\n'
+                         f'Время выхода:\n'
+                         f'{message.text}')
+    set_brigade_answer(message.chat.id)
+    await state.clear()
+    add_brigade_planning_reminder(message)
+
+
+@respRouter.callback_query(F.data == 'remind_later_yes')
+async def remind_later_yes(callback: CallbackQuery):
+    await callback.message.edit_text(f'{controller}\n'
+                                     f'Рабочие вышли на объект✅')
+    await callback.answer('')
+
+
+@respRouter.callback_query(F.data == 'remind_later_yes')
+async def remind_later_yes(callback: CallbackQuery):
+    await callback.message.edit_text(f'{controller}\n'
+                                     f'Рабочие не вышли на объект❌')
+    await callback.answer('')
 
 
 @respRouter.callback_query(F.data == 'table_updated')
 async def table_updated(callback: CallbackQuery):
     await callback.message.answer(f'{controller}\nТаблица обновлена!✅')
     await callback.answer('')
-    set_chat_table_answer(callback.message.chat.id)
+    set_table_answer(callback.message.chat.id)

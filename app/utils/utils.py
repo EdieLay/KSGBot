@@ -1,11 +1,9 @@
 from aiogram.types import Message
 import aiogram.exceptions
 import sqlite3
+
 from app.utils.queries import execute_query
-
-
-chats_answers = {}
-chats_table_answers = {}
+import app.keyboards as kb
 
 
 async def is_admin(message: Message):
@@ -17,7 +15,7 @@ async def is_admin(message: Message):
         delete_chat(chat_id)
         return False
     ids = list(map(lambda admin: admin.user.id, admins))
-    return id in ids
+    return user_id in ids
 
 
 def get_responsible(chat_id):
@@ -27,47 +25,15 @@ def get_responsible(chat_id):
 
 
 def reset_chats_answers():
-    chats = execute_query('SELECT id FROM chats')
-    global chats_answers
-    global chats_table_answers
-    chats_answers = {}
-    chats_table_answers = {}
-    for chat in chats:
-        chat_id = chat[0]
-        chats_answers[chat_id] = False
-        chats_table_answers[chat_id] = False
+    execute_query(f'UPDATE chats SET brigade_answered = 0, table_answered = 0')
 
 
-def delete_chat_answer(chat_id):
-    chats_answers.pop(chat_id, None)
+def set_brigade_answer(chat_id):
+    execute_query(f'UPDATE chats SET brigade_answered = 1 WHERE id = {chat_id}')
 
 
-def add_chat_answer(chat_id):
-    chats_answers[chat_id] = False
-
-
-def set_chat_answer(chat_id):
-    chats_answers[chat_id] = True
-
-
-def get_chat_answer(chat_id):
-    return chats_answers[chat_id]
-
-
-def delete_chat_table_answer(chat_id):
-    chats_table_answers.pop(chat_id, None)
-
-
-def add_chat_table_answer(chat_id):
-    chats_table_answers[chat_id] = False
-
-
-def set_chat_table_answer(chat_id):
-    chats_table_answers[chat_id] = True
-
-
-def get_chat_table_answer(chat_id):
-    return chats_table_answers[chat_id]
+def set_table_answer(chat_id):
+    execute_query(f'UPDATE chats SET table_answered = 1 WHERE id = {chat_id}')
 
 
 def check_reminder_is_on(chat_id):
@@ -78,7 +44,12 @@ def check_reminder_is_on(chat_id):
 def delete_chat(chat_id):
     try:
         execute_query(f'DELETE FROM chats WHERE id = {chat_id}')
-        delete_chat_answer(chat_id)
     except sqlite3.Error as er:
         print('SQLite error: %s' % (' '.join(er.args)))
         print("Exception class is: ", er.__class__)
+
+
+async def remind_later(message: Message):
+    resps = get_responsible(message.chat.id)
+    await message.answer(f'@{" @".join(resps)}\n'
+                   f'Уточните, пожалуйста, все ли рабочие заняли свои места сегодня?', reply_markup=kb.remind_later_kb)

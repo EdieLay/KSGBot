@@ -11,10 +11,18 @@ class RemovingResponsible(StatesGroup):
     confirm = State()
 
 
-class BrigadeReason(StatesGroup):
-    will_come = State()
+class BrigadePartly(StatesGroup):
     reason = State()
-    partly_reason = State()
+    coming = State()
+    planning = State()
+
+
+class BrigadeFail(StatesGroup):
+    reason = State()
+    planning = State()
+    planning_date = State()
+    not_planning_reason = State()
+    further_actions = State()
 
 
 class TableEditing(StatesGroup):

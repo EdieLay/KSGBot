@@ -6,18 +6,17 @@ import csv
 import os.path
 
 import app.keyboards as kb
-from app.utils.utils import get_chat_answer, get_responsible, delete_chat, get_chat_table_answer
+from app.utils.queries import execute_query
+from app.utils.utils import get_responsible, delete_chat
 
 
 # функция отправки напоминаний
 async def brigade_report(bot: Bot):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
-    cur.execute('SELECT id FROM chats')
-    chats = cur.fetchall()
+    chats = execute_query('SELECT id, brigade_answered FROM chats')
     for chat in chats:
         chat_id = chat[0]
-        if not get_chat_answer(chat_id):
+        answered = chat[1]
+        if answered == 0:
             resps = get_responsible(chat_id)
             if len(resps) == 0:
                 message = ('Вы включили напоминание, но не добавили ответственных. '
@@ -31,19 +30,15 @@ async def brigade_report(bot: Bot):
                 await bot.send_message(chat_id=chat_id, text=message, reply_markup=reply_markup)
             except aiogram.exceptions.TelegramForbiddenError:
                 delete_chat(chat_id)
-    cur.close()
-    con.close()
 
 
 async def table_update(bot: Bot):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
-    cur.execute(f'SELECT id, spreadsheet FROM chats')
-    chats = cur.fetchall()
+    chats = execute_query(f'SELECT id, spreadsheet, table_answered FROM chats')
     for chat in chats:
         chat_id = chat[0]
         spreadsheet = chat[1]
-        if not get_chat_table_answer(chat_id):
+        answered = chat[2]
+        if answered == 0:
             resps = get_responsible(chat_id)
             if spreadsheet != None and len(resps) > 0:
                 try:
@@ -55,8 +50,6 @@ async def table_update(bot: Bot):
                                                                  f'{spreadsheet}', reply_markup=kb.table_reminder)
                 except aiogram.exceptions.TelegramForbiddenError:
                     delete_chat(chat_id)
-    cur.close()
-    con.close()
 
 
 async def bd_today(bot: Bot):
