@@ -8,11 +8,12 @@ from aiogram.fsm.context import FSMContext
 import sqlite3
 
 import app.keyboards as kb
-from app.utils.utils import (NewResponsible, RemovingResponsible, BrigadeReason,
-                             TableEditing, ReminderOff, ChangeBDays,
-                             CallbackAdminFilter, MessageAdminFilter,
-                             CallbackRespFilter, MessageRespFilter,
-                             set_chat_answer, delete_chat_answer, add_chat_answer,
+from app.utils.queries import execute_query
+from app.utils.states import (NewResponsible, RemovingResponsible, BrigadeReason,
+                              TableEditing, ReminderOff, ChangeBDays)
+from app.utils.filters import (CallbackAdminFilter, MessageAdminFilter,
+                               CallbackRespFilter, MessageRespFilter)
+from app.utils.utils import (set_chat_answer, delete_chat_answer, add_chat_answer,
                              set_chat_table_answer, delete_chat_table_answer, add_chat_table_answer,
                              check_reminder_is_on, get_responsible)
 
@@ -73,16 +74,11 @@ async def reminder_on(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     if not check_reminder_is_on(chat_id):
         try:
-            con = sqlite3.connect('chats.db')
-            cur = con.cursor()
-            cur.execute(f'INSERT INTO chats (id) VALUES ({chat_id})')
-            con.commit()
+            execute_query(f'INSERT INTO chats (id) VALUES ({chat_id})')
             add_chat_answer(chat_id)
             add_chat_table_answer(chat_id)
             await callback.message.edit_text('✅Напоминание включено✅', reply_markup=kb.reminder)
             await callback.answer('Напоминание включено')
-            cur.close()
-            con.close()
         except sqlite3.Error:
             await callback.message.answer('❌Не удалось включить напоминание❌', reply_markup=kb.reminder)
             await callback.answer('Не удалось включить напоминание')
@@ -115,19 +111,13 @@ async def reminder_off_cancel(callback: CallbackQuery, state: FSMContext):
 @adminRouter.message(ReminderOff.confirming)
 async def reminder_off_confirming(message: Message, state: FSMContext):
     if message.text.strip().lower() == 'подтверждаю':
-        con = sqlite3.connect('chats.db')
-        cur = con.cursor()
-        con.execute('PRAGMA foreign_keys = ON')
         try:
-            cur.execute(f'DELETE FROM chats WHERE id = {message.chat.id}')
-            con.commit()
+            execute_query(f'DELETE FROM chats WHERE id = {message.chat.id}')
             delete_chat_answer(message.chat.id)
             delete_chat_table_answer(message.chat.id)
             await message.answer('Напоминание выключено!')
         except sqlite3.Error:
             await message.answer('Не удалось выключить напоминание!')
-        cur.close()
-        con.close()
     await state.clear()
 
 
@@ -162,18 +152,13 @@ async def set_responsible(message: Message, state: FSMContext):
 
 @adminRouter.callback_query(NewResponsible.confirm, F.data == 'confirm_yes')
 async def confirmed(callback: CallbackQuery, state: FSMContext):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
-    con.execute('PRAGMA foreign_keys = ON')
     data = await state.get_data()
     responsible = data["responsible"]
     chat_id = callback.message.chat.id
-    cur.execute(f'SELECT * FROM responsibles WHERE username = "{responsible}" AND chat_id = {chat_id}')
-    rows = cur.fetchall()
+    rows = execute_query(f'SELECT * FROM responsibles WHERE username = "{responsible}" AND chat_id = {chat_id}')
     if len(rows) == 0:
         try:
-            cur.execute(f'INSERT INTO responsibles (username, chat_id) VALUES ("{responsible}", {chat_id})')
-            con.commit()
+            execute_query(f'INSERT INTO responsibles (username, chat_id) VALUES ("{responsible}", {chat_id})')
             await callback.message.edit_text(f'✅Ответственным назначен @{responsible}✅', reply_markup=kb.reminder)
             await callback.answer('Ответственный назначен')
         except sqlite3.Error:
@@ -182,8 +167,6 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
     else:
         await callback.message.edit_text('⚠️Этот пользователь уже назначен ответственным в этом чате⚠️', reply_markup=kb.reminder)
         await callback.answer('')
-    cur.close()
-    con.close()
     await state.clear()
 
 
@@ -226,22 +209,16 @@ async def responsible_remove_confirm(callback: CallbackQuery, state: FSMContext)
 
 @adminRouter.callback_query(RemovingResponsible.confirm, F.data == 'confirm_yes')
 async def responsible_remove_apply(callback: CallbackQuery, state: FSMContext):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
-    con.execute('PRAGMA foreign_keys = ON')
     data = await state.get_data()
     responsible = data["remove"]
     chat_id = callback.message.chat.id
     try:
-        cur.execute(f'DELETE FROM responsibles WHERE username = "{responsible}" AND chat_id = {chat_id}')
-        con.commit()
+        execute_query(f'DELETE FROM responsibles WHERE username = "{responsible}" AND chat_id = {chat_id}')
         await callback.message.edit_text(f'✅@{responsible} удалён из ответственных✅', reply_markup=kb.reminder)
         await callback.answer('Ответственный удалён')
     except sqlite3.Error:
         await callback.message.edit_text('❌Не удалось удалить ответственного❌', reply_markup=kb.reminder)
         await callback.answer('')
-    cur.close()
-    con.close()
     await state.clear()
 
 
@@ -254,18 +231,13 @@ async def responsible_remove_declined(callback: CallbackQuery, state: FSMContext
 
 @adminRouter.callback_query(F.data == 'table_change')
 async def table_change(callback: CallbackQuery, state: FSMContext):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
     chat_id = callback.message.chat.id
-    cur.execute(f'SELECT spreadsheet FROM chats WHERE chats.id = {chat_id}')
-    row = cur.fetchall()
+    row = execute_query(f'SELECT spreadsheet FROM chats WHERE chats.id = {chat_id}')
     if len(row) == 0:
         await callback.message.edit_text('⚠️Включите напоминание, чтобы добавить таблицу⚠️', reply_markup=kb.reminder)
         await callback.answer('')
     else:
         spreadsheet = row[0][0]
-        print(spreadsheet)
-        spreadsheet_state = ''
         if not bool(spreadsheet):
             spreadsheet_state = 'Вы ещё не добавляли таблицу!'
         else:
@@ -273,8 +245,6 @@ async def table_change(callback: CallbackQuery, state: FSMContext):
         await state.set_state(TableEditing.table)
         await callback.message.edit_text(f'{spreadsheet_state}\nВведите ссылку на новую таблицу.', reply_markup=kb.cancel_table)
         await callback.answer('')
-    cur.close()
-    con.close()
 
 
 @adminRouter.callback_query(TableEditing.table, F.data == 'cancel_table')
@@ -286,36 +256,26 @@ async def table_cancel(callback: CallbackQuery, state: FSMContext):
 
 @adminRouter.callback_query(TableEditing.table, F.data == 'delete_table')
 async def table_delete(callback: CallbackQuery, state: FSMContext):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
     chat_id = callback.message.chat.id
     try:
-        cur.execute(f'UPDATE chats SET spreadsheet = null where id = {chat_id}')
-        con.commit()
+        execute_query(f'UPDATE chats SET spreadsheet = null where id = {chat_id}')
         await callback.message.edit_text('✅Ссылка на таблицу удалена✅', reply_markup=kb.reminder)
         await callback.answer('')
     except sqlite3.Error:
         await callback.message.edit_text('❌Не удалось удалить ссылку на таблицу❌', reply_markup=kb.reminder)
         await callback.answer('')
-    cur.close()
-    con.close()
     await state.clear()
 
 
 @adminRouter.message(TableEditing.table)
 async def table_apply(message: Message, state: FSMContext):
-    con = sqlite3.connect('chats.db')
-    cur = con.cursor()
     new_table = message.text.strip()
     chat_id = message.chat.id
     try:
-        cur.execute(f'UPDATE chats SET spreadsheet = "{new_table}" where id = {chat_id}')
-        con.commit()
+        execute_query(f'UPDATE chats SET spreadsheet = "{new_table}" where id = {chat_id}')
         await message.answer('✅Ссылка на таблицу обновлена✅', reply_markup=kb.reminder)
     except sqlite3.Error:
         await message.answer('❌Не удалось обновить ссылку на таблицу❌')
-    cur.close()
-    con.close()
     await state.clear()
 
 
@@ -336,6 +296,7 @@ async def brigade_fail(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
 
 
+# Готовое сообщение, если бригады не вышли
 @respRouter.message(BrigadeReason.reason)
 async def brigade_reason(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -345,7 +306,6 @@ async def brigade_reason(message: Message, state: FSMContext):
     set_chat_answer(message.chat.id)
 
 
-# бригада вышла не в полном составе
 @respRouter.callback_query(F.data == 'brigade_part')
 async def brigade_part(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BrigadeReason.partly_reason)
@@ -361,26 +321,15 @@ async def brigade_partly_reason(message: Message, state: FSMContext):
     await state.set_state(BrigadeReason.will_come)
 
 
-@respRouter.callback_query(BrigadeReason.will_come, F.data == 'confirm_yes')
+# Бригады выйдут или не выйдут позже
+@respRouter.callback_query(BrigadeReason.will_come, F.data.in_({'confirm_yes', 'confirm_no'}))
 async def brigade_will_come(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     brig_state = data['brigade_state']
     brig_reason = data['brigade_reason']
-    await callback.message.answer(f'{controller}\n{brig_state}\n'
-                                  f'Выйдут на объект позже.\n\n'
-                                  f'{brig_reason}')
-    await callback.answer('')
-    await state.clear()
-    set_chat_answer(callback.message.chat.id)
-
-
-@respRouter.callback_query(BrigadeReason.will_come, F.data == 'confirm_no')
-async def brigade_will_not_come(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    brig_state = data['brigade_state']
-    brig_reason = data['brigade_reason']
-    await callback.message.answer(f'{controller}\n{brig_state}\n'
-                                  f'Сегодня на объект НЕ выйдут!\n\n'
+    brig_coming = 'Выйдут на объект позже.' if callback.data == 'confirm_yes' else 'Сегодня на объект НЕ выйдут!'
+    await callback.message.edit_text(f'{controller}\n{brig_state}\n'
+                                  f'{brig_coming}\n\n'
                                   f'{brig_reason}')
     await callback.answer('')
     await state.clear()

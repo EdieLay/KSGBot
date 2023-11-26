@@ -1,6 +1,8 @@
 chats
 id (id чата в телеге)
 spreadsheet (гугл таблица с данными о работниках)
+brigade_answered
+table_answered
 
 
 responsibles
