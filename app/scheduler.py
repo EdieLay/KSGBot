@@ -8,7 +8,7 @@ scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 
 
 def add_default_jobs(bot):
-    scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', hour='10-23',
+    scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', hour='10-23', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(rem.table_update, trigger='cron', day_of_week='thu', hour='11-18/2', start_date=datetime.now(),
                       kwargs={'bot': bot})
