@@ -385,13 +385,13 @@ async def brigade_partly_not_coming(callback: CallbackQuery, state: FSMContext):
 async def brigade_partly_further_actions(message: Message, state: FSMContext):
     data = await state.get_data()
     brigade_reason = data['brigade_reason']
-    await message.edit_text(f'{controller}\n'
-                            f'Бригада(ы) вышла(и) на объект в неполном составе⚠️\n'
-                            f'Сегодня на объект не выйдут\n\n'
-                            f'Бригады и причины:\n'
-                            f'{brigade_reason}\n\n'
-                            f'Дальнейшие действия:\n'
-                            f'{message.text}')
+    await message.answer(f'{controller}\n'
+                         f'Бригада(ы) вышла(и) на объект в неполном составе⚠️\n'
+                         f'Сегодня на объект не выйдут\n\n'
+                         f'Бригады и причины:\n'
+                         f'{brigade_reason}\n\n'
+                         f'Дальнейшие действия:\n'
+                         f'{message.text}')
     set_brigade_answer(message.chat.id)
     await state.clear()
 
