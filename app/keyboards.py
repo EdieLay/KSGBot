@@ -41,7 +41,17 @@ table_reminder = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Таблица обновлена', callback_data='table_updated')]
 ])
 
-remind_later_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Да', callback_data='remind_later_yes')],
-    [InlineKeyboardButton(text='Нет', callback_data='remind_later_no')]
+remind_later = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Да', callback_data='remind_later_yes'),
+     InlineKeyboardButton(text='Нет', callback_data='remind_later_no')]
+])
+
+new_work = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Да', callback_data='new_work_yes'),
+     InlineKeyboardButton(text='Нет', callback_data='new_work_no')]
+])
+
+new_work_type = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Основные виды работ', callback_data='new_work_main')],
+    [InlineKeyboardButton(text='Подневщики', callback_data='new_work_daily')]
 ])

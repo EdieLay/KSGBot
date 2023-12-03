@@ -25,7 +25,7 @@ def get_responsible(chat_id):
 
 
 def reset_chats_answers():
-    execute_query(f'UPDATE chats SET brigade_answered = 0, table_answered = 0')
+    execute_query(f'UPDATE chats SET brigade_answered = 0, table_answered = 0, new_work_answered = 0')
 
 
 def set_brigade_answer(chat_id):
@@ -34,6 +34,10 @@ def set_brigade_answer(chat_id):
 
 def set_table_answer(chat_id):
     execute_query(f'UPDATE chats SET table_answered = 1 WHERE id = {chat_id}')
+
+
+def set_new_work_answer(chat_id):
+    execute_query(f'UPDATE chats SET new_work_answered = 1 WHERE id = {chat_id}')
 
 
 def check_reminder_is_on(chat_id):
@@ -52,4 +56,4 @@ def delete_chat(chat_id):
 async def remind_later(message: Message):
     resps = get_responsible(message.chat.id)
     await message.answer(f'@{" @".join(resps)}\n'
-                   f'Уточните, пожалуйста, все ли рабочие заняли свои места сегодня?', reply_markup=kb.remind_later_kb)
+                   f'Уточните, пожалуйста, все ли рабочие заняли свои места сегодня?', reply_markup=kb.remind_later)
