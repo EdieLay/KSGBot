@@ -282,15 +282,17 @@ async def table_apply(message: Message, state: FSMContext):
 # Бригада вышла
 @respRouter.callback_query(F.data == 'brigade_ok')
 async def brigade_ok(callback: CallbackQuery):
-    await callback.message.edit_text(f'{controller}\nБригады вышли на работу✅')
-    await callback.answer('✅')
+    await callback.message.edit_text(callback.message.text + '\n(✅Бригады вышли✅)')
+    await callback.message.answer(f'{controller}\nБригады вышли на работу✅')
+    await callback.answer('')
     set_brigade_answer(callback.message.chat.id)
 
 
 # Бригады не вышли -> укажите причину
 @respRouter.callback_query(F.data == 'brigade_fail')
 async def brigade_fail(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Укажите бригаду(ы) и причину(ы) невыхода.')
+    await callback.message.edit_text(callback.message.text + '\n(❌Бригады не вышли❌)')
+    await callback.message.answer('Укажите бригаду(ы) и причину(ы) невыхода.')
     await callback.answer('')
     set_brigade_answer(callback.message.chat.id)
     await state.set_state(BrigadeFail.reason)
@@ -307,7 +309,8 @@ async def brigade_fail_reason(message: Message, state: FSMContext):
 # Планируют выходить -> укажите дату
 @respRouter.callback_query(BrigadeFail.planning, F.data == 'confirm_yes')
 async def brigade_fail_planning(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Укажите время выхода бригад.')
+    await callback.message.edit_text(callback.message.text + '\n(Да)')
+    await callback.message.answer('Укажите время выхода бригад.')
     await callback.answer('')
     await state.set_state(BrigadeFail.planning_date)
 
@@ -329,7 +332,8 @@ async def brigade_fail_planning_date(message: Message, state: FSMContext):
 # Не планируют выходить -> укажите причину
 @respRouter.callback_query(BrigadeFail.planning, F.data == 'confirm_no')
 async def brigade_fail_not_planning(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Укажите причину, почему не планируют выходить.')
+    await callback.message.edit_text(callback.message.text + '\n(Нет)')
+    await callback.message.answer('Укажите причину, почему не планируют выходить.')
     await callback.answer('')
     await state.set_state(BrigadeFail.not_planning_reason)
 
@@ -362,7 +366,8 @@ async def brigade_fail_further_actions(message: Message, state: FSMContext):
 # В неполном составе -> укажите бригады и причины
 @respRouter.callback_query(F.data == 'brigade_part')
 async def brigade_partly(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Укажите бригаду(ы) и причину(ы) выхода в неполном составе.')
+    await callback.message.edit_text(callback.message.text + '\n(⚠️Бригада(ы) вышла(и) в неполном составе⚠️)')
+    await callback.message.answer('Укажите бригаду(ы) и причину(ы) выхода в неполном составе.')
     await callback.answer('')
     set_brigade_answer(callback.message.chat.id)
     await state.set_state(BrigadePartly.reason)
@@ -379,7 +384,9 @@ async def brigade_partly_reason(message: Message, state: FSMContext):
 # Не планируют выходить -> ваши дальнейшие действия?
 @respRouter.callback_query(BrigadePartly.coming, F.data == 'confirm_no')
 async def brigade_partly_not_coming(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Ваши дальнейшие действия по решению проблемы?')
+    await callback.message.edit_text(callback.message.text + '\n(Нет)')
+    await callback.message.answer('Ваши дальнейшие действия по решению проблемы?')
+    await callback.answer('')
     await state.set_state(BrigadePartly.further_actions)
 
 
@@ -401,7 +408,8 @@ async def brigade_partly_further_actions(message: Message, state: FSMContext):
 # Планируют выходить -> когда?
 @respRouter.callback_query(BrigadePartly.coming, F.data == 'confirm_yes')
 async def brigade_partly_coming(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Когда бригада обещает выйти в полном составе? Укажите предполагаемое время.')
+    await callback.message.edit_text(callback.message.text + '\n(Да)')
+    await callback.message.answer('Когда бригада обещает выйти в полном составе? Укажите предполагаемое время.')
     await callback.answer('')
     await state.set_state(BrigadePartly.planning)
 
@@ -424,20 +432,23 @@ async def brigade_partly_planning(message: Message, state: FSMContext):
 
 @respRouter.callback_query(F.data == 'remind_later_yes')
 async def remind_later_yes(callback: CallbackQuery):
-    await callback.message.edit_text(f'{controller}\n'
-                                     f'Рабочие вышли на объект✅')
+    await callback.message.edit_text(callback.message.text + '\n(Да)')
+    await callback.message.answer(f'{controller}\n'
+                                  f'Рабочие вышли на объект✅')
     await callback.answer('')
 
 
 @respRouter.callback_query(F.data == 'remind_later_no')
 async def remind_later_yes(callback: CallbackQuery):
-    await callback.message.edit_text(f'{controller}\n'
-                                     f'Рабочие не вышли на объект❌')
+    await callback.message.edit_text(callback.message.text + '\n(Нет)')
+    await callback.message.answer(f'{controller}\n'
+                                  f'Рабочие не вышли на объект❌')
     await callback.answer('')
 
 
 @respRouter.callback_query(F.data == 'table_updated')
 async def table_updated(callback: CallbackQuery):
+    await callback.message.edit_text(callback.message.text + '\n(Таблица обновлена)')
     await callback.message.answer(f'{controller}\nТаблица обновлена!✅')
     await callback.answer('')
     set_table_answer(callback.message.chat.id)
@@ -445,27 +456,31 @@ async def table_updated(callback: CallbackQuery):
 
 @newWorkRouter.callback_query(F.data == 'new_work_no')
 async def new_work_no(callback: CallbackQuery):
-    await callback.message.edit_text(f'{controller}\n'
-                                     f'Новый вид работ на объекте не планируется.')
+    await callback.message.edit_text(callback.message.text + '\n(Нет)')
+    await callback.message.answer(f'{controller}\n'
+                                  f'Новый вид работ на объекте не планируется.')
     await callback.answer('')
     set_new_work_answer(callback.message.chat.id)
 
 
 @newWorkRouter.callback_query(F.data == 'new_work_yes')
 async def new_work_yes(callback: CallbackQuery):
-    await callback.message.edit_text('Основные виды работ или подневщики?', reply_markup=kb.new_work_type)
+    await callback.message.edit_text(callback.message.text + '\n(Да)')
+    await callback.message.answer('Основные виды работ или подневщики?', reply_markup=kb.new_work_type)
     await callback.answer('')
     set_new_work_answer(callback.message.chat.id)
 
 
 @newWorkRouter.callback_query(F.data == 'new_work_main')
 async def new_work_main(callback: CallbackQuery):
-    await callback.message.edit_text('Заполните данные согласно  форме: https://forms.gle/3mpAhFGTrQtgpWqVA')
+    await callback.message.edit_text(callback.message.text + '\n(Основные виды работ)')
+    await callback.message.answer('Заполните данные согласно  форме: https://forms.gle/3mpAhFGTrQtgpWqVA')
     await callback.answer('')
 
 
 @newWorkRouter.callback_query(F.data == 'new_work_daily')
 async def new_work_main(callback: CallbackQuery):
-    await callback.message.edit_text('Заполните данные согласно  форме: https://forms.gle/qnqkPEdiNj9gbq6C9 ')
+    await callback.message.edit_text(callback.message.text + '\n(Подневщики)')
+    await callback.message.answer('Заполните данные согласно  форме: https://forms.gle/qnqkPEdiNj9gbq6C9 ')
     await callback.answer('')
 
