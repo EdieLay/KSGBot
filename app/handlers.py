@@ -458,7 +458,7 @@ async def table_updated(callback: CallbackQuery):
 async def new_work_no(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(Нет)')
     await callback.message.answer(f'{controller}\n'
-                                  f'Новый вид работ на объекте не планируется.')
+                                  f'Новые работники не нужны.')
     await callback.answer('')
     set_new_work_answer(callback.message.chat.id)
 
@@ -466,21 +466,21 @@ async def new_work_no(callback: CallbackQuery):
 @newWorkRouter.callback_query(F.data == 'new_work_yes')
 async def new_work_yes(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(Да)')
-    await callback.message.answer('Основные виды работ или подневщики?', reply_markup=kb.new_work_type)
+    await callback.message.answer('Будут начаты работы по контракту или нужны разнорабочие?', reply_markup=kb.new_work_type)
     await callback.answer('')
     set_new_work_answer(callback.message.chat.id)
 
 
 @newWorkRouter.callback_query(F.data == 'new_work_main')
 async def new_work_main(callback: CallbackQuery):
-    await callback.message.edit_text(callback.message.text + '\n(Основные виды работ)')
+    await callback.message.edit_text(callback.message.text + '\n(Работы по контракту)')
     await callback.message.answer('Заполните данные согласно  форме: https://forms.gle/3mpAhFGTrQtgpWqVA')
     await callback.answer('')
 
 
 @newWorkRouter.callback_query(F.data == 'new_work_daily')
 async def new_work_main(callback: CallbackQuery):
-    await callback.message.edit_text(callback.message.text + '\n(Подневщики)')
+    await callback.message.edit_text(callback.message.text + '\n(Разнорабочие)')
     await callback.message.answer('Заполните данные согласно  форме: https://forms.gle/qnqkPEdiNj9gbq6C9 ')
     await callback.answer('')
 

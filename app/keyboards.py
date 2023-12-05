@@ -52,6 +52,6 @@ new_work = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 new_work_type = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Основные виды работ', callback_data='new_work_main')],
-    [InlineKeyboardButton(text='Подневщики', callback_data='new_work_daily')]
+    [InlineKeyboardButton(text='Работы по контракту', callback_data='new_work_main')],
+    [InlineKeyboardButton(text='Разнорабочие', callback_data='new_work_daily')]
 ])
