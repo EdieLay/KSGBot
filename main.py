@@ -1,6 +1,5 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import sqlite3
 import os
 
@@ -8,12 +7,13 @@ import app.handlers as hnd
 from app.handlers import adminRouter, respRouter, newWorkRouter
 from app.utils.utils import reset_chats_answers
 from app.scheduler import add_default_jobs, start_scheduler, add_dev_jobs
+from tokens import release_token, dev_token
 
-version = 'release'
+version = 'dev'
 if 'release' == version:
-    bot = Bot('6678317099:AAH850dSpV7hr-VC0GpijLoYOpiegkBcgKs')  # release
+    bot = Bot(release_token)  # release
 else:
-    bot = Bot('6918424612:AAFfcmvsTNnVc1FFz908PgLuowo9Djzo62c')  # dev
+    bot = Bot(dev_token)  # dev
 
 
 @adminRouter.message(hnd.F.document, hnd.ChangeBDays.change)
