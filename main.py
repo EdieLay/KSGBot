@@ -9,7 +9,7 @@ from app.utils.utils import reset_chats_answers
 from app.scheduler import add_default_jobs, start_scheduler, add_dev_jobs
 from tokens import release_token, dev_token
 
-version = 'dev'
+version = 'release'
 if 'release' == version:
     bot = Bot(release_token)  # release
 else:
