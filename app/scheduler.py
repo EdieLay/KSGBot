@@ -14,7 +14,7 @@ def add_default_jobs(bot):
                       kwargs={'bot': bot})
     scheduler.add_job(rem.bd_today, trigger='cron', hour=10, minute=10, start_date=datetime.now(),
                       kwargs={'bot': bot})
-    scheduler.add_job(rem.new_work, trigger='cron', day_of_week='tue', hour='14-19/2', start_date=datetime.now(),
+    scheduler.add_job(rem.new_work, trigger='cron', day_of_week='mon,wed,fri', hour='12-19/2', start_date=datetime.now(),
                       kwargs={'bot': bot})
     scheduler.add_job(reset_chats_answers, trigger='cron', hour=2, minute=0, start_date=datetime.now())
 
