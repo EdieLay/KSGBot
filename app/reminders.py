@@ -116,7 +116,7 @@ async def new_work(bot: Bot):
                 if message_to_delete is not None:
                     await bot.delete_message(chat_id, message_to_delete)  # удаляем предыдущее сообщение, чтобы не спамить
                 new_message = await bot.send_message(chat_id=chat_id,
-                                                     text=f'{resps_mes}@KonstantinSoleniy\n'
+                                                     text=f'{resps_mes}\n'
                                                           f'Уточните, пожалуйста, в ближайшее время планируется новый вид работ на объекте?\n'
                                                           f'Нуждаетесь в поиске новых работников?',
                                                      reply_markup=kb.new_work)
