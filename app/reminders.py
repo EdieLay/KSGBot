@@ -59,11 +59,11 @@ async def table_update(bot: Bot):
                         await bot.delete_message(chat_id, message_to_delete)  # удаляем предыдущее сообщение, чтобы не спамить
                     new_message = await bot.send_message(chat_id=chat_id,
                                                          text=f'@{" @".join(resps)}\n'
-                                                              f'Добрый день!😊\n'
                                                               f'Прошу обновить списки сотрудников на объекте.\n'
-                                                              f'Дедлайн сегодня до 18:00🕰\n'
-                                                              f'Напоминание будет приходить каждые два часа, пока не нажата кнопка "Таблица обновлена".\n'
-                                                              f'{spreadsheet}', reply_markup=kb.table_reminder)
+                                                              f'Дедлайн сегодня до 18:00\n'
+                                                              f'<a href=\"{spreadsheet}\">ССЫЛКА НА ТАБЛИЦУ</a>',
+                                                         reply_markup=kb.table_reminder, parse_mode='HTML',
+                                                         disable_web_page_preview=True)
                     table_messages[chat_id] = new_message.message_id  # сохраняем новое сообщение
                 except aiogram.exceptions.TelegramForbiddenError:
                     delete_chat(chat_id)
