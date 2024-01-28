@@ -17,6 +17,7 @@ from app.utils.filters import (AdminCallbackFilter, AdminMessageFilter,
                                NewWorkCallbackFilter)
 from app.utils.utils import (set_brigade_answer, set_table_answer, set_new_work_answer,
                              check_reminder_is_on, get_responsible)
+from tokens import controller
 
 
 adminRouter = Router()
@@ -26,11 +27,6 @@ adminRouter.message.filter(AdminMessageFilter())
 respRouter = Router()
 respRouter.callback_query.filter(RespCallbackFilter())
 respRouter.message.filter(RespMessageFilter())
-
-newWorkRouter = Router()
-newWorkRouter.callback_query.filter(NewWorkCallbackFilter())
-
-controller = '@SvetlanaD007'
 
 
 # запуск бота
@@ -454,7 +450,7 @@ async def table_updated(callback: CallbackQuery):
     set_table_answer(callback.message.chat.id)
 
 
-@newWorkRouter.callback_query(F.data == 'new_work_no')
+@respRouter.callback_query(F.data == 'new_work_no')
 async def new_work_no(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(Нет)')
     await callback.message.answer(f'{controller}\n'
@@ -463,7 +459,7 @@ async def new_work_no(callback: CallbackQuery):
     set_new_work_answer(callback.message.chat.id)
 
 
-@newWorkRouter.callback_query(F.data == 'new_work_yes')
+@respRouter.callback_query(F.data == 'new_work_yes')
 async def new_work_yes(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(Да)')
     await callback.message.answer('Будут начаты работы по контракту или нужны разнорабочие?', reply_markup=kb.new_work_type)
@@ -471,14 +467,14 @@ async def new_work_yes(callback: CallbackQuery):
     set_new_work_answer(callback.message.chat.id)
 
 
-@newWorkRouter.callback_query(F.data == 'new_work_main')
+@respRouter.callback_query(F.data == 'new_work_main')
 async def new_work_main(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(Работы по контракту)')
     await callback.message.answer('Заполните данные согласно  форме: https://forms.gle/3mpAhFGTrQtgpWqVA')
     await callback.answer('')
 
 
-@newWorkRouter.callback_query(F.data == 'new_work_daily')
+@respRouter.callback_query(F.data == 'new_work_daily')
 async def new_work_main(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(Разнорабочие)')
     await callback.message.answer('Заполните данные согласно  форме: https://forms.gle/qnqkPEdiNj9gbq6C9 ')
