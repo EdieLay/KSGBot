@@ -3,8 +3,8 @@ from aiogram import Bot, Dispatcher, types
 import sqlite3
 import os
 
-import app.handlers as hnd
-from app.handlers import adminRouter, respRouter, newWorkRouter
+import app.handlers.commands as cmds
+from app.handlers.routers import adminRouter, respRouter
 from app.utils.utils import reset_chats_answers
 from app.scheduler import add_default_jobs, start_scheduler, add_dev_jobs
 from tokens import release_token, dev_token
@@ -16,8 +16,8 @@ else:
     bot = Bot(dev_token)  # dev
 
 
-@adminRouter.message(hnd.F.document, hnd.ChangeBDays.change)
-async def change_bdays(message: hnd.Message, state: hnd.FSMContext):
+@adminRouter.message(cmds.F.document, cmds.ChangeBDays.change)
+async def change_bdays(message: cmds.Message, state: cmds.FSMContext):
     file_id = message.document.file_id
     file = await bot.get_file(file_id)
     file_path = file.file_path
@@ -32,8 +32,7 @@ async def set_commands():
     commands = [
         types.BotCommand(command='start', description='Начальная установка'),
         types.BotCommand(command='reminder', description='Управление напоминаниями'),
-        types.BotCommand(command='birthday', description='Управление днями рождения'),
-        types.BotCommand(command='brigadeok', description='Сообщить о выходе бригад')
+        types.BotCommand(command='birthday', description='Управление днями рождения')
     ]
     await bot.set_my_commands(commands, types.BotCommandScopeDefault())
 
@@ -51,7 +50,6 @@ async def main():
     dp = Dispatcher()
     dp.include_router(adminRouter)
     dp.include_router(respRouter)
-    dp.include_router(newWorkRouter)
     await set_commands()
 
     if not os.path.exists('files'):

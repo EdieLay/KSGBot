@@ -23,7 +23,7 @@ def add_dev_jobs(bot):
     #scheduler.add_job(rem.brigade_report, trigger='cron', minute='*', start_date=datetime.now(), kwargs={'bot': bot})
     #scheduler.add_job(rem.new_work, trigger='cron', minute='*', start_date=datetime.now(),
     #                  kwargs={'bot': bot})
-    scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=10), kwargs={'bot': bot})
+    scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
     # scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
 
 
