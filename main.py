@@ -43,6 +43,7 @@ async def main():
     con.execute('PRAGMA foreign_keys = ON')
     cur.execute('CREATE TABLE IF NOT EXISTS chats (id integer primary key, spreadsheet text null, brigade_answered integer default 1 not null, table_answered integer default 1 not null, new_work_answered integer default 1 not null)')
     cur.execute('CREATE TABLE IF NOT EXISTS responsibles (id integer primary key autoincrement, username text not null, chat_id integer, foreign key(chat_id) references chats(id) on delete cascade)')
+    cur.execute('CREATE TABLE IF NOT EXISTS construction_managers (id integer primary key autoincrement, username text not null, chat_id integer, foreign key(chat_id) references chats(id) on delete cascade)')
     con.commit()
     cur.close()
     con.close()

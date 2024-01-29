@@ -1,11 +1,19 @@
-chats
+chats:
 id (id чата в телеге)
 spreadsheet (гугл таблица с данными о работниках)
 brigade_answered
 table_answered
+new_work_answered
++morning_plan_answered
 
 
-responsibles
+responsibles:
+id (autoincrement)
+username (ник в телеге)
+chat_id (foreign to chats)
+
+
+construction_managers:
 id (autoincrement)
 username (ник в телеге)
 chat_id (foreign to chats)

@@ -1,7 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timedelta
 
-import app.reminders as rem
+import app.reminders.reminders as rem
 from app.utils.utils import reset_chats_answers, remind_later
 
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')

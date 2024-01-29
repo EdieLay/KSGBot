@@ -24,6 +24,12 @@ def get_responsible(chat_id):
     return resps
 
 
+def get_construction_managers(chat_id):
+    rows = execute_query(f'SELECT username FROM construction_managers WHERE chat_id={chat_id}')
+    resps = list(map(lambda row: row[0], rows))
+    return resps
+
+
 def reset_chats_answers():
     execute_query(f'UPDATE chats SET brigade_answered = 0, table_answered = 0, new_work_answered = 0')
 
