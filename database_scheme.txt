@@ -5,6 +5,10 @@ brigade_answered
 table_answered
 new_work_answered
 +morning_plan_answered
++night_payment_answered
++day_payment_answered
++tomorrow_plan_answered
++evening_plan_answered
 
 
 responsibles:

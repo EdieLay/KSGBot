@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 import app.keyboards as kb
 from app.scheduler import add_brigade_planning_reminder
 from app.utils.states import BrigadePartly, BrigadeFail
-from app.utils.utils import set_brigade_answer
+from app.utils.utils import set_answer
 from tokens import controller
 
 brigadeReportRouter = Router()
@@ -17,7 +17,7 @@ async def brigade_ok(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(✅Бригады вышли✅)')
     await callback.message.answer(f'{controller}\nБригады вышли на работу✅')
     await callback.answer('')
-    set_brigade_answer(callback.message.chat.id)
+    set_answer(callback.message.chat.id, 'brigade_answered')
 
 
 # Бригады не вышли -> укажите причину
@@ -26,7 +26,7 @@ async def brigade_fail(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(callback.message.text + '\n(❌Бригады не вышли❌)')
     await callback.message.answer('Укажите бригаду(ы) и причину(ы) невыхода.')
     await callback.answer('')
-    set_brigade_answer(callback.message.chat.id)
+    set_answer(callback.message.chat.id, 'brigade_answered')
     await state.set_state(BrigadeFail.reason)
 
 
@@ -101,7 +101,7 @@ async def brigade_partly(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(callback.message.text + '\n(⚠️Бригада(ы) вышла(и) в неполном составе⚠️)')
     await callback.message.answer('Укажите бригаду(ы) и причину(ы) выхода в неполном составе.')
     await callback.answer('')
-    set_brigade_answer(callback.message.chat.id)
+    set_answer(callback.message.chat.id, 'brigade_answered')
     await state.set_state(BrigadePartly.reason)
 
 

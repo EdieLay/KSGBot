@@ -11,6 +11,7 @@ from app.utils.utils import get_responsible, delete_chat
 table_messages = {}
 new_work_messages = {}
 
+
 async def table_update(bot: Bot):
     chats = execute_query(f'SELECT id, spreadsheet, table_answered FROM chats')
     for chat in chats:

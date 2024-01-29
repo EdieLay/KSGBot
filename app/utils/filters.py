@@ -1,6 +1,6 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message, CallbackQuery
-from app.utils.utils import is_admin, get_responsible
+from app.utils.utils import is_admin, get_responsible, get_construction_managers
 
 
 class AdminCallbackFilter(BaseFilter):
@@ -24,7 +24,11 @@ class RespCallbackFilter(BaseFilter):
         super()
 
     async def __call__(self, callback: CallbackQuery) -> bool:
-        return callback.from_user.username in get_responsible(callback.message.chat.id)
+        username = callback.from_user.username
+        chat_id = callback.message.chat.id
+        resp = get_responsible(chat_id)
+        managers = get_construction_managers(chat_id)
+        return username in resp or username in managers
 
 
 class RespMessageFilter(BaseFilter):
@@ -32,7 +36,11 @@ class RespMessageFilter(BaseFilter):
         super()
 
     async def __call__(self, message: Message) -> bool:
-        return message.from_user.username in get_responsible(message.chat.id)
+        username = message.from_user.username
+        chat_id = message.chat.id
+        resp = get_responsible(chat_id)
+        managers = get_construction_managers(chat_id)
+        return username in resp or username in managers
 
 
 class NewWorkCallbackFilter(BaseFilter):

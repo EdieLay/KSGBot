@@ -1,20 +1,35 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timedelta
 
-import app.reminders.reminders as rem
+import app.reminders.daily as d_rems
+import app.reminders.weekly as w_rems
 from app.utils.utils import reset_chats_answers, remind_later
 
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 
 
 def add_default_jobs(bot):
-    scheduler.add_job(rem.brigade_report, trigger='cron', day_of_week='mon-fri', hour='10-23', minute='0,30',
+    scheduler.add_job(d_rems.morning_plan, trigger='cron', day_of_week='mon-fri', hour='9', minute='30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(rem.table_update, trigger='cron', day_of_week='thu', hour='11-18/2', start_date=datetime.now(),
+    scheduler.add_job(d_rems.morning_plan, trigger='cron', day_of_week='mon-fri', hour='10-23', minute='0,30',
+                      start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(d_rems.brigade_report, trigger='cron', day_of_week='mon-fri', hour='10-23', minute='0,30',
+                      start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(d_rems.night_payment, trigger='cron', day_of_week='mon-fri', hour='13-23', minute='0,30',
+                      start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(d_rems.day_payment, trigger='cron', day_of_week='mon-fri', hour='17-23', minute='0,30',
+                      start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-fri', hour='17-23', minute='0,30',
+                      start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-fri', hour='18', minute='30',
+                      start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-fri', hour='19-23', minute='0,30',
+                      start_date=datetime.now(), kwargs={'bot': bot})
+    scheduler.add_job(w_rems.table_update, trigger='cron', day_of_week='thu', hour='11-18/2', start_date=datetime.now(),
                       kwargs={'bot': bot})
-    scheduler.add_job(rem.bd_today, trigger='cron', hour=10, minute=10, start_date=datetime.now(),
+    scheduler.add_job(w_rems.bd_today, trigger='cron', hour=10, minute=10, start_date=datetime.now(),
                       kwargs={'bot': bot})
-    scheduler.add_job(rem.new_work, trigger='cron', day_of_week='mon,wed,fri', hour='12-19/2', start_date=datetime.now(),
+    scheduler.add_job(w_rems.new_work, trigger='cron', day_of_week='mon,wed,fri', hour='12-19/2', start_date=datetime.now(),
                       kwargs={'bot': bot})
     scheduler.add_job(reset_chats_answers, trigger='cron', hour=2, minute=0, start_date=datetime.now())
 
@@ -23,7 +38,7 @@ def add_dev_jobs(bot):
     #scheduler.add_job(rem.brigade_report, trigger='cron', minute='*', start_date=datetime.now(), kwargs={'bot': bot})
     #scheduler.add_job(rem.new_work, trigger='cron', minute='*', start_date=datetime.now(),
     #                  kwargs={'bot': bot})
-    scheduler.add_job(rem.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
+    scheduler.add_job(d_rems.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
     # scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
 
 

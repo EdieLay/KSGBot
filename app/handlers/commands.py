@@ -125,7 +125,7 @@ async def set_responsible(message: Message, state: FSMContext):
     responsible = message.text.strip()
     await state.update_data(responsible=responsible)
     await state.set_state(NewResponsible.confirm)
-    await message.answer(f'Сделать ответственным @{responsible}?', reply_markup=kb.confirm)
+    await message.answer(f'Добавить нового ответственного: @{responsible}?', reply_markup=kb.confirm)
 
 
 @commandsRouter.callback_query(NewResponsible.confirm, F.data == 'confirm_yes')
@@ -137,13 +137,13 @@ async def confirmed(callback: CallbackQuery, state: FSMContext):
     if len(rows) == 0:
         try:
             execute_query(f'INSERT INTO responsibles (username, chat_id) VALUES ("{responsible}", {chat_id})')
-            await callback.message.edit_text(f'✅Ответственным назначен @{responsible}✅', reply_markup=kb.reminder)
-            await callback.answer('Ответственный назначен')
+            await callback.message.edit_text(f'✅Успешное добавление ответственного: @{responsible}✅', reply_markup=kb.reminder)
+            await callback.answer('')
         except sqlite3.Error:
             await callback.message.answer('❌Не удалось добавить ответственного❌\nПопробуйте включить напоминание', reply_markup=kb.reminder)
             await callback.answer('')
     else:
-        await callback.message.edit_text('⚠️Этот пользователь уже назначен ответственным в этом чате⚠️', reply_markup=kb.reminder)
+        await callback.message.edit_text('⚠️Этот пользователь уже имеет роль ответственного в этом чате⚠️', reply_markup=kb.reminder)
         await callback.answer('')
     await state.clear()
 
@@ -161,7 +161,7 @@ async def responsible_remove(callback: CallbackQuery, state: FSMContext):
     chat_id = callback.message.chat.id
     responsibles = get_responsible(chat_id)
     if len(responsibles) == 0:
-        await callback.message.edit_text('⚠️Вы ещё не назначили ответственных, либо напоминание не включено⚠️', reply_markup=kb.reminder)
+        await callback.message.edit_text('⚠️Вы ещё не назначали ответственного, либо напоминание не включено⚠️', reply_markup=kb.reminder)
         await callback.answer('')
     else:
         resps_kb = list(map(lambda resp: [kb.InlineKeyboardButton(text=f'{resp}', callback_data=f'{resp}')], responsibles))
@@ -179,7 +179,7 @@ async def responsible_remove_confirm(callback: CallbackQuery, state: FSMContext)
         await callback.answer('')
         await state.clear()
     elif callback.data in get_responsible(callback.message.chat.id):
-        await callback.message.edit_text(f'Убрать из ответственных {callback.data}?', reply_markup=kb.confirm)
+        await callback.message.edit_text(f'Убрать ответственного: {callback.data}?', reply_markup=kb.confirm)
         await callback.answer('')
         await state.update_data(remove=callback.data)
         await state.set_state(RemovingResponsible.confirm)
@@ -192,7 +192,7 @@ async def responsible_remove_apply(callback: CallbackQuery, state: FSMContext):
     chat_id = callback.message.chat.id
     try:
         execute_query(f'DELETE FROM responsibles WHERE username = "{responsible}" AND chat_id = {chat_id}')
-        await callback.message.edit_text(f'✅@{responsible} удалён из ответственных✅', reply_markup=kb.reminder)
+        await callback.message.edit_text(f'✅Роль ответственного снята @{responsible}✅', reply_markup=kb.reminder)
         await callback.answer('Ответственный удалён')
     except sqlite3.Error:
         await callback.message.edit_text('❌Не удалось удалить ответственного❌', reply_markup=kb.reminder)

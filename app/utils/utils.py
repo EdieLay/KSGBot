@@ -34,16 +34,8 @@ def reset_chats_answers():
     execute_query(f'UPDATE chats SET brigade_answered = 0, table_answered = 0, new_work_answered = 0')
 
 
-def set_brigade_answer(chat_id):
-    execute_query(f'UPDATE chats SET brigade_answered = 1 WHERE id = {chat_id}')
-
-
-def set_table_answer(chat_id):
-    execute_query(f'UPDATE chats SET table_answered = 1 WHERE id = {chat_id}')
-
-
-def set_new_work_answer(chat_id):
-    execute_query(f'UPDATE chats SET new_work_answered = 1 WHERE id = {chat_id}')
+def set_answer(chat_id, field):
+    execute_query(f'UPDATE chats SET {field} = 1 WHERE id = {chat_id}')
 
 
 def check_reminder_is_on(chat_id):

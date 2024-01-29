@@ -1,5 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 
+morning_plan_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='morning_plan_done')]]
+morning_plan = InlineKeyboardMarkup(inline_keyboard=morning_plan_kb)
 
 # клавиатура подтверждения выхода бригады
 brigade_report_kb = [
@@ -9,11 +11,26 @@ brigade_report_kb = [
 ]
 brigade_report = InlineKeyboardMarkup(inline_keyboard=brigade_report_kb)
 
+night_payment_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='night_payment_done')]]
+night_payment = InlineKeyboardMarkup(inline_keyboard=night_payment_kb)
+
+day_payment_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='day_payment_done')],
+                  [InlineKeyboardButton(text='Дневной смены не было', callback_data='day_payment_not')]]
+day_payment = InlineKeyboardMarkup(inline_keyboard=day_payment_kb)
+
+tomorrow_plan_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='tomorrow_plan_done')]]
+tomorrow_plan = InlineKeyboardMarkup(inline_keyboard=tomorrow_plan_kb)
+
+evening_plan_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='evening_plan_done')]]
+evening_plan = InlineKeyboardMarkup(inline_keyboard=evening_plan_kb)
+
 reminder_kb = [
     [InlineKeyboardButton(text='Включить напоминание', callback_data='reminder_on'),
      InlineKeyboardButton(text='Отключить напоминание', callback_data='reminder_off')],
     [InlineKeyboardButton(text='Добавить ответственного', callback_data='responsible_add'),
      InlineKeyboardButton(text='Удалить ответственного', callback_data='responsible_remove')],
+    [InlineKeyboardButton(text='Добавить рук.строя', callback_data='construction_manager_add'),
+     InlineKeyboardButton(text='Удалить рук.строя', callback_data='construction_manager_remove')],
     [InlineKeyboardButton(text='Изменить ссылку на таблицу', callback_data='table_change')]
 ]
 reminder = InlineKeyboardMarkup(inline_keyboard=reminder_kb)
