@@ -24,6 +24,14 @@ async def night_payment_done(callback: CallbackQuery):
     set_answer(callback.message.chat.id, 'night_payment_answered')
 
 
+@dailyRouter.callback_query(F.data == 'night_payment_not')
+async def night_payment_done(callback: CallbackQuery):
+    await callback.message.edit_text(callback.message.text + '\n(Ночной смены не было)')
+    await callback.message.reply(f'{controller}\nНочной смены не было.')
+    await callback.answer('')
+    set_answer(callback.message.chat.id, 'night_payment_answered')
+
+
 @dailyRouter.callback_query(F.data == 'day_payment_done')
 async def day_payment_done(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(ГОТОВО)')

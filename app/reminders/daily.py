@@ -33,20 +33,16 @@ async def morning_plan(bot: Bot):
         if answered == 0:
             resps = get_responsible(chat_id)
             managers = get_construction_managers(chat_id)
-            if len(resps) == 0 and len(managers) == 0:
-                message = ('Вы включили напоминание, но не добавили ответственных и рук. строя. '
-                           'Пожалуйста, сделайте это через команду /reminder')
-                reply_markup = None
-            else:
+            if len(resps) > 0 or len(managers) > 0:
                 resps_str = f'@{" @".join(resps)} ' if len(resps) > 0 else ''
                 managers_str = f'@{" @".join(managers)}' if len(managers) > 0 else ''
                 message = (f'{resps_str}{managers_str}\n'
                            f'Прошу предоставить план работ/отчет о фактическом количестве людей на сегодня (с указанием даты) + фото рабочих в начале рабочего дня.\n')
                 reply_markup = kb.morning_plan
-            try:
-                await del_and_send_msg(bot, chat_id, morning_plan_messages, message, reply_markup)
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+                try:
+                    await del_and_send_msg(bot, chat_id, morning_plan_messages, message, reply_markup)
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
         else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
             if chat_id in morning_plan_messages:
                 del morning_plan_messages[chat_id]
@@ -60,18 +56,14 @@ async def brigade_report(bot: Bot):
         global brigade_messages  # предыдущее сообщение с напоминанием
         if answered == 0:
             resps = get_responsible(chat_id)
-            if len(resps) == 0:
-                message = ('Вы включили напоминание, но не добавили ответственных. '
-                           'Пожалуйста, сделайте это через команду /reminder')
-                reply_markup = None
-            else:
+            if len(resps) > 0:
                 message = (f'@{" @".join(resps)}\n'
                            f'Уточните, пожалуйста, все ли рабочие вышли сегодня на объект?\n')
                 reply_markup = kb.brigade_report
-            try:
-                await del_and_send_msg(bot, chat_id, brigade_messages, message, reply_markup)
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+                try:
+                    await del_and_send_msg(bot, chat_id, brigade_messages, message, reply_markup)
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
         else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
             if chat_id in brigade_messages:
                 del brigade_messages[chat_id]
@@ -86,20 +78,16 @@ async def night_payment(bot: Bot):
         if answered == 0:
             resps = get_responsible(chat_id)
             managers = get_construction_managers(chat_id)
-            if len(resps) == 0 and len(managers) == 0:
-                message = ('Вы включили напоминание, но не добавили ответственных и рук. строя. '
-                           'Пожалуйста, сделайте это через команду /reminder')
-                reply_markup = None
-            else:
+            if len(resps) > 0 or len(managers) > 0:
                 resps_str = f'@{" @".join(resps)} ' if len(resps) > 0 else ''
                 managers_str = f'@{" @".join(managers)}' if len(managers) > 0 else ''
                 message = (f'{resps_str}{managers_str}\n'
                            f'Прошу подать заявку на оплату ночного дежурного + фото отчет\n')
                 reply_markup = kb.night_payment
-            try:
-                await del_and_send_msg(bot, chat_id, night_payment_messages, message, reply_markup)
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+                try:
+                    await del_and_send_msg(bot, chat_id, night_payment_messages, message, reply_markup)
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
         else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
             if chat_id in night_payment_messages:
                 del night_payment_messages[chat_id]
@@ -113,18 +101,14 @@ async def day_payment(bot: Bot):
         global day_payment_messages  # предыдущее сообщение с напоминанием
         if answered == 0:
             managers = get_construction_managers(chat_id)
-            if len(managers) == 0:
-                message = ('Вы включили напоминание, но не добавили рук. строя. '
-                           'Пожалуйста, сделайте это через команду /reminder')
-                reply_markup = None
-            else:
+            if len(managers) > 0:
                 message = (f'@{" @".join(managers)}\n'
                            f'Просьба подать заявку на оплату подневщикам за сегодня. Заявку необходимо скинуть до 19:00\n')
                 reply_markup = kb.day_payment
-            try:
-                await del_and_send_msg(bot, chat_id, day_payment_messages, message, reply_markup)
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+                try:
+                    await del_and_send_msg(bot, chat_id, day_payment_messages, message, reply_markup)
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
         else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
             if chat_id in day_payment_messages:
                 del day_payment_messages[chat_id]
@@ -139,20 +123,16 @@ async def tomorrow_plan(bot: Bot):
         if answered == 0:
             resps = get_responsible(chat_id)
             managers = get_construction_managers(chat_id)
-            if len(resps) == 0 and len(managers) == 0:
-                message = ('Вы включили напоминание, но не добавили ответственных и рук. строя. '
-                           'Пожалуйста, сделайте это через команду /reminder')
-                reply_markup = None
-            else:
+            if len(resps) > 0 and len(managers) > 0:
                 resps_str = f'@{" @".join(resps)} ' if len(resps) > 0 else ''
                 managers_str = f'@{" @".join(managers)}' if len(managers) > 0 else ''
                 message = (f'{resps_str}{managers_str}\n'
                            f'Прошу предоставить план работ/отчет о фактическом количестве людей на завтра (с указанием даты).\n')
                 reply_markup = kb.tomorrow_plan
-            try:
-                await del_and_send_msg(bot, chat_id, tomorrow_plan_messages, message, reply_markup)
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+                try:
+                    await del_and_send_msg(bot, chat_id, tomorrow_plan_messages, message, reply_markup)
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
         else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
             if chat_id in tomorrow_plan_messages:
                 del tomorrow_plan_messages[chat_id]
@@ -167,20 +147,16 @@ async def evening_plan(bot: Bot):
         if answered == 0:
             resps = get_responsible(chat_id)
             managers = get_construction_managers(chat_id)
-            if len(resps) == 0 and len(managers) == 0:
-                message = ('Вы включили напоминание, но не добавили ответственных и рук. строя. '
-                           'Пожалуйста, сделайте это через команду /reminder')
-                reply_markup = None
-            else:
+            if len(resps) > 0 or len(managers) > 0:
                 resps_str = f'@{" @".join(resps)} ' if len(resps) > 0 else ''
                 managers_str = f'@{" @".join(managers)}' if len(managers) > 0 else ''
                 message = (f'{resps_str}{managers_str}\n'
                            f'Прошу предоставить отчет о проделанной работе за сегодня: фото до/после + заявка на оплату с полным описанием выполненных видов работ.\n')
                 reply_markup = kb.evening_plan
-            try:
-                await del_and_send_msg(bot, chat_id, evening_plan_messages, message, reply_markup)
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+                try:
+                    await del_and_send_msg(bot, chat_id, evening_plan_messages, message, reply_markup)
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
         else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
             if chat_id in evening_plan_messages:
                 del evening_plan_messages[chat_id]

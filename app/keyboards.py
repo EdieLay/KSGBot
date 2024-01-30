@@ -11,7 +11,8 @@ brigade_report_kb = [
 ]
 brigade_report = InlineKeyboardMarkup(inline_keyboard=brigade_report_kb)
 
-night_payment_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='night_payment_done')]]
+night_payment_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='night_payment_done')],
+                    [InlineKeyboardButton(text='Ночной смены не было', callback_data='night_payment_not')]]
 night_payment = InlineKeyboardMarkup(inline_keyboard=night_payment_kb)
 
 day_payment_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='day_payment_done')],
