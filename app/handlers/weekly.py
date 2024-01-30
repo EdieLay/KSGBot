@@ -10,8 +10,7 @@ weeklyRouter = Router()
 
 @weeklyRouter.callback_query(F.data == 'table_updated')
 async def table_updated(callback: CallbackQuery):
-    await callback.message.edit_text(callback.message.text + '\n(Таблица обновлена)')
-    await callback.message.answer(f'{controller}\nТаблица обновлена!✅')
+    await callback.message.reply(f'{controller}\nТаблица обновлена!✅')
     await callback.answer('')
     set_answer(callback.message.chat.id, 'table_answered')
 
@@ -19,7 +18,7 @@ async def table_updated(callback: CallbackQuery):
 @weeklyRouter.callback_query(F.data == 'new_work_no')
 async def new_work_no(callback: CallbackQuery):
     await callback.message.edit_text(callback.message.text + '\n(Нет)')
-    await callback.message.answer(f'{controller}\n'
+    await callback.message.reply(f'{controller}\n'
                                   f'Новые работники не нужны.')
     await callback.answer('')
     set_answer(callback.message.chat.id, 'new_work_answered')

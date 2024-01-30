@@ -11,6 +11,16 @@ class RemovingResponsible(StatesGroup):
     confirm = State()
 
 
+class NewConstructionManager(StatesGroup):
+    manager = State()
+    confirm = State()
+
+
+class RemovingConstructionManager(StatesGroup):
+    manager = State()
+    confirm = State()
+
+
 class BrigadePartly(StatesGroup):
     reason = State()
     coming = State()

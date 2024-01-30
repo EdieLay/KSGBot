@@ -40,15 +40,6 @@ class RespMessageFilter(BaseFilter):
         chat_id = message.chat.id
         resp = get_responsible(chat_id)
         managers = get_construction_managers(chat_id)
+        print(username in resp or username in managers)
         return username in resp or username in managers
-
-
-class NewWorkCallbackFilter(BaseFilter):
-    def __init__(self):
-        super()
-
-    async def __call__(self, callback: CallbackQuery) -> bool:
-        resp = get_responsible(callback.message.chat.id)
-        resp.append('KonstantinSoleniy')
-        return callback.from_user.username in resp
 

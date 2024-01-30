@@ -9,7 +9,7 @@ from app.utils.utils import reset_chats_answers
 from app.scheduler import add_default_jobs, start_scheduler, add_dev_jobs
 from tokens import release_token, dev_token
 
-version = 'dev'
+version = 'release'
 if 'release' == version:
     bot = Bot(release_token)  # release
 else:
@@ -41,7 +41,9 @@ async def main():
     con = sqlite3.connect('chats.db')
     cur = con.cursor()
     con.execute('PRAGMA foreign_keys = ON')
-    cur.execute('CREATE TABLE IF NOT EXISTS chats (id integer primary key, spreadsheet text null, brigade_answered integer default 1 not null, table_answered integer default 1 not null, new_work_answered integer default 1 not null)')
+    cur.execute('CREATE TABLE IF NOT EXISTS chats (id integer primary key, spreadsheet text null, brigade_answered integer default 1 not null, table_answered integer default 1 not null, new_work_answered integer default 1 not null, '
+                'morning_plan_answered integer default 1 not null, night_payment_answered integer default 1 not null, day_payment_answered integer default 1 not null, '
+                'tomorrow_plan_answered integer default 1 not null, evening_plan_answered integer default 1 not null)')
     cur.execute('CREATE TABLE IF NOT EXISTS responsibles (id integer primary key autoincrement, username text not null, chat_id integer, foreign key(chat_id) references chats(id) on delete cascade)')
     cur.execute('CREATE TABLE IF NOT EXISTS construction_managers (id integer primary key autoincrement, username text not null, chat_id integer, foreign key(chat_id) references chats(id) on delete cascade)')
     con.commit()

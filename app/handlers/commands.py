@@ -10,8 +10,9 @@ import sqlite3
 import app.keyboards as kb
 from app.utils.queries import execute_query
 from app.utils.states import (NewResponsible, RemovingResponsible,
+                              NewConstructionManager, RemovingConstructionManager,
                               TableEditing, ReminderOff, ChangeBDays)
-from app.utils.utils import check_reminder_is_on, get_responsible
+from app.utils.utils import check_reminder_is_on, get_responsible, get_construction_managers
 
 commandsRouter = Router()
 
@@ -203,6 +204,113 @@ async def responsible_remove_apply(callback: CallbackQuery, state: FSMContext):
 @commandsRouter.callback_query(RemovingResponsible.confirm, F.data == 'confirm_no')
 async def responsible_remove_declined(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text('⚠️Отмена удаления ответственного⚠️', reply_markup=kb.reminder)
+    await callback.answer('')
+    await state.clear()
+
+
+@commandsRouter.callback_query(F.data == 'construction_manager_add')
+async def construction_manager_add(callback: CallbackQuery, state: FSMContext):
+    chat_id = callback.message.chat.id
+    if check_reminder_is_on(chat_id):
+        await callback.message.edit_text('Введите имя пользователя нового рук. строя (без @)', reply_markup=kb.cancel)
+        await callback.answer('')
+        await state.set_state(NewConstructionManager.manager)
+    else:
+        await callback.message.edit_text('⚠️Включите напоминание, чтобы добавить рук. строя⚠️', reply_markup=kb.reminder)
+        await callback.answer('')
+
+
+@commandsRouter.callback_query(NewConstructionManager.manager, F.data == 'cancel')
+async def cancel_construction_manager(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('⚠️Отмена назначения рук. строя⚠️', reply_markup=kb.reminder)
+    await callback.answer('Отмена')
+    await state.clear()
+
+
+# Установка нового ответственного
+@commandsRouter.message(NewConstructionManager.manager)
+async def set_construction_manager(message: Message, state: FSMContext):
+    construction_manager = message.text.strip()
+    await state.update_data(construction_manager=construction_manager)
+    await state.set_state(NewConstructionManager.confirm)
+    await message.answer(f'Добавить нового рук. строя: @{construction_manager}?', reply_markup=kb.confirm)
+
+
+@commandsRouter.callback_query(NewConstructionManager.confirm, F.data == 'confirm_yes')
+async def construction_manager_confirmed(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    construction_manager = data["construction_manager"]
+    chat_id = callback.message.chat.id
+    rows = execute_query(f'SELECT * FROM construction_managers WHERE username = "{construction_manager}" AND chat_id = {chat_id}')
+    if len(rows) == 0:
+        try:
+            execute_query(f'INSERT INTO construction_managers (username, chat_id) VALUES ("{construction_manager}", {chat_id})')
+            await callback.message.edit_text(f'✅Успешное добавление рук. строя: @{construction_manager}✅', reply_markup=kb.reminder)
+            await callback.answer('')
+        except sqlite3.Error:
+            await callback.message.answer('❌Не удалось добавить рук. строя❌\nПопробуйте включить напоминание', reply_markup=kb.reminder)
+            await callback.answer('')
+    else:
+        await callback.message.edit_text('⚠️Этот пользователь уже имеет роль рук. строя в этом чате⚠️', reply_markup=kb.reminder)
+        await callback.answer('')
+    await state.clear()
+
+
+# эту функцию можно совместить с responsible_add
+@commandsRouter.callback_query(NewConstructionManager.confirm, F.data == 'confirm_no')
+async def construction_manager_not(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('⚠️Отмена назначения рук. строя⚠️', reply_markup=kb.reminder)
+    await callback.answer('')
+    await state.clear()
+
+
+@commandsRouter.callback_query(F.data == 'construction_manager_remove')
+async def construction_manager_remove(callback: CallbackQuery, state: FSMContext):
+    chat_id = callback.message.chat.id
+    construction_managers = get_construction_managers(chat_id)
+    if len(construction_managers) == 0:
+        await callback.message.edit_text('⚠️Вы ещё не назначали рук. строя, либо напоминание не включено⚠️', reply_markup=kb.reminder)
+        await callback.answer('')
+    else:
+        managers_kb = list(map(lambda manager: [kb.InlineKeyboardButton(text=f'{manager}', callback_data=f'{manager}')], construction_managers))
+        managers_kb.append([kb.InlineKeyboardButton(text='Отмена', callback_data='cancel_construction_managers')])
+        managers = kb.InlineKeyboardMarkup(inline_keyboard=managers_kb)
+        await state.set_state(RemovingConstructionManager.manager)
+        await callback.message.edit_text('Выберите пользователя', reply_markup=managers)
+        await callback.answer('')
+
+
+@commandsRouter.callback_query(RemovingConstructionManager.manager)
+async def construction_manager_remove_confirm(callback: CallbackQuery, state: FSMContext):
+    if callback.data == 'cancel_construction_managers':
+        await callback.message.edit_text('⚠️Отмена удаления рук. строя⚠️', reply_markup=kb.reminder)
+        await callback.answer('')
+        await state.clear()
+    elif callback.data in get_construction_managers(callback.message.chat.id):
+        await callback.message.edit_text(f'Убрать рук. строя: {callback.data}?', reply_markup=kb.confirm)
+        await callback.answer('')
+        await state.update_data(remove_manager=callback.data)
+        await state.set_state(RemovingConstructionManager.confirm)
+
+
+@commandsRouter.callback_query(RemovingConstructionManager.confirm, F.data == 'confirm_yes')
+async def construction_manager_remove_apply(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    manager = data["remove_manager"]
+    chat_id = callback.message.chat.id
+    try:
+        execute_query(f'DELETE FROM construction_managers WHERE username = "{manager}" AND chat_id = {chat_id}')
+        await callback.message.edit_text(f'✅Роль рук. строя снята @{manager}✅', reply_markup=kb.reminder)
+        await callback.answer('')
+    except sqlite3.Error:
+        await callback.message.edit_text('❌Не удалось удалить рук. строя❌', reply_markup=kb.reminder)
+        await callback.answer('')
+    await state.clear()
+
+
+@commandsRouter.callback_query(RemovingConstructionManager.confirm, F.data == 'confirm_no')
+async def construction_manager_remove_declined(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('⚠️Отмена удаления рук. строя⚠️', reply_markup=kb.reminder)
     await callback.answer('')
     await state.clear()
 

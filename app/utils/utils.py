@@ -31,7 +31,9 @@ def get_construction_managers(chat_id):
 
 
 def reset_chats_answers():
-    execute_query(f'UPDATE chats SET brigade_answered = 0, table_answered = 0, new_work_answered = 0')
+    execute_query(f'UPDATE chats SET brigade_answered = 0, table_answered = 0, new_work_answered = 0, '
+                  f'morning_plan_answered = 0, night_payment_answered = 0, day_payment_answered = 0, '
+                  f'tomorrow_plan_answered = 0, evening_plan_answered = 0')
 
 
 def set_answer(chat_id, field):
