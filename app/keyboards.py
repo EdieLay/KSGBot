@@ -1,7 +1,9 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 
-morning_plan_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='morning_plan_done')]]
-morning_plan = InlineKeyboardMarkup(inline_keyboard=morning_plan_kb)
+morning_plan_making_kb = [[InlineKeyboardButton(text='Отчёт формируется', callback_data='morning_plan_making')]]
+morning_plan_making = InlineKeyboardMarkup(inline_keyboard=morning_plan_making_kb)
+morning_plan_done_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='morning_plan_done')]]
+morning_plan_done = InlineKeyboardMarkup(inline_keyboard=morning_plan_done_kb)
 
 # клавиатура подтверждения выхода бригады
 brigade_report_kb = [
@@ -11,19 +13,28 @@ brigade_report_kb = [
 ]
 brigade_report = InlineKeyboardMarkup(inline_keyboard=brigade_report_kb)
 
-night_payment_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='night_payment_done')],
-                    [InlineKeyboardButton(text='Ночной смены не было', callback_data='night_payment_not')]]
-night_payment = InlineKeyboardMarkup(inline_keyboard=night_payment_kb)
+night_payment_making_kb = [[InlineKeyboardButton(text='Заявка и отчёт формируются', callback_data='night_payment_making')],
+                           [InlineKeyboardButton(text='Ночной смены не было', callback_data='night_payment_not')]]
+night_payment_making = InlineKeyboardMarkup(inline_keyboard=night_payment_making_kb)
+night_payment_done_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='night_payment_done')]]
+night_payment_done = InlineKeyboardMarkup(inline_keyboard=night_payment_done_kb)
 
-day_payment_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='day_payment_done')],
+day_payment_making_kb = [[InlineKeyboardButton(text='Заявка формируется', callback_data='day_payment_making')],
                   [InlineKeyboardButton(text='Дневной смены не было', callback_data='day_payment_not')]]
-day_payment = InlineKeyboardMarkup(inline_keyboard=day_payment_kb)
+day_payment_making = InlineKeyboardMarkup(inline_keyboard=day_payment_making_kb)
+day_payment_done_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='day_payment_done')]]
+day_payment_done = InlineKeyboardMarkup(inline_keyboard=day_payment_done_kb)
 
-tomorrow_plan_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='tomorrow_plan_done')]]
-tomorrow_plan = InlineKeyboardMarkup(inline_keyboard=tomorrow_plan_kb)
+evening_plan_making_kb = [[InlineKeyboardButton(text='Заявка и отчёт формируются', callback_data='evening_plan_making')],
+                          [InlineKeyboardButton(text='Отчёт и заявка будут поданы завтра', callback_data='evening_plan_tomorrow')]]
+evening_plan_making = InlineKeyboardMarkup(inline_keyboard=evening_plan_making_kb)
+evening_plan_done_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='evening_plan_done')]]
+evening_plan_done = InlineKeyboardMarkup(inline_keyboard=evening_plan_done_kb)
 
-evening_plan_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='evening_plan_done')]]
-evening_plan = InlineKeyboardMarkup(inline_keyboard=evening_plan_kb)
+tomorrow_plan_making_kb = [[InlineKeyboardButton(text='Заявка и отчёт формируются', callback_data='tomorrow_plan_making')],]
+tomorrow_plan_making = InlineKeyboardMarkup(inline_keyboard=tomorrow_plan_making_kb)
+tomorrow_plan_done_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='tomorrow_plan_done')]]
+tomorrow_plan_done = InlineKeyboardMarkup(inline_keyboard=tomorrow_plan_done_kb)
 
 reminder_kb = [
     [InlineKeyboardButton(text='Включить напоминание', callback_data='reminder_on'),
