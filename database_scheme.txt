@@ -4,11 +4,17 @@ spreadsheet (гугл таблица с данными о работниках)
 brigade_answered
 table_answered
 new_work_answered
-+morning_plan_answered
-+night_payment_answered
-+day_payment_answered
-+tomorrow_plan_answered
-+evening_plan_answered
+morning_plan_answered
+night_payment_answered
+day_payment_answered
+tomorrow_plan_answered
+evening_plan_answered
+
++chats_requests:
++id (id чата в телеге)
++parent_chat_id (foreign to chats)
++spreadsheet
++tmc_yesterday_answered (ТМЦ за вчерашний день)
 
 
 responsibles:

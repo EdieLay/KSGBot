@@ -40,6 +40,10 @@ class TableEditing(StatesGroup):
     table = State()
 
 
+class RequestsTableEditing(StatesGroup):
+    table = State()
+
+
 class ReminderOff(StatesGroup):
     confirming = State()
 

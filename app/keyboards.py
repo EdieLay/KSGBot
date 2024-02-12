@@ -36,6 +36,9 @@ tomorrow_plan_making = InlineKeyboardMarkup(inline_keyboard=tomorrow_plan_making
 tomorrow_plan_done_kb = [[InlineKeyboardButton(text='ГОТОВО', callback_data='tomorrow_plan_done')]]
 tomorrow_plan_done = InlineKeyboardMarkup(inline_keyboard=tomorrow_plan_done_kb)
 
+requests_table_kb = [[InlineKeyboardButton(text='Таблица обновлена', callback_data='requests_table_done')]]
+requests_table = InlineKeyboardMarkup(inline_keyboard=requests_table_kb)
+
 reminder_kb = [
     [InlineKeyboardButton(text='Включить напоминание', callback_data='reminder_on'),
      InlineKeyboardButton(text='Отключить напоминание', callback_data='reminder_off')],
@@ -46,6 +49,13 @@ reminder_kb = [
     [InlineKeyboardButton(text='Изменить ссылку на таблицу', callback_data='table_change')]
 ]
 reminder = InlineKeyboardMarkup(inline_keyboard=reminder_kb)
+
+requests_kb = [
+    [InlineKeyboardButton(text='Включить напоминание', callback_data='requests_on'),
+     InlineKeyboardButton(text='Отключить напоминание', callback_data='requests_off')],
+    [InlineKeyboardButton(text='Изменить ссылку на таблицу', callback_data='requests_table_change')]
+]
+requests = InlineKeyboardMarkup(inline_keyboard=requests_kb)
 
 confirm_kb = [
     [InlineKeyboardButton(text='Да', callback_data='confirm_yes')],

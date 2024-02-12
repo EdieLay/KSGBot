@@ -6,14 +6,16 @@ import os.path
 
 import app.keyboards as kb
 from app.utils.queries import execute_query
-from app.utils.utils import get_responsible, get_construction_managers, delete_chat
+from app.utils.utils import get_responsible, get_construction_managers, delete_chat, delete_requests_chat
 
 morning_plan_messages = {}
 brigade_messages = {}
 night_payment_messages = {}
 day_payment_messages = {}
-tomorrow_plan_messages = {}
 evening_plan_messages = {}
+tomorrow_plan_messages = {}
+
+requests_table_messages = {}
 
 
 async def del_and_send_msg(bot: Bot, chat_id, msgs, msg, markup):
@@ -158,3 +160,32 @@ async def tomorrow_plan(bot: Bot):
             if chat_id in tomorrow_plan_messages:
                 del tomorrow_plan_messages[chat_id]
 
+
+async def requests_table(bot: Bot):
+    chats = execute_query('SELECT id, parent_chat_id, spreadsheet, tmc_yesterday_answered FROM chats_requests')
+    for chat in chats:
+        chat_id = chat[0]
+        parent_id = chat[1]
+        spreadsheet = chat[2]
+        answered = chat[3]
+        global requests_table_messages
+        if answered == 0:
+            managers = get_construction_managers(parent_id)
+            if len(managers) > 0:
+                message = (f'@{" @".join(managers)}\n'
+                           f'Прошу подтвердить поступления на объект ТМЦ (товарно-материальных ценностей) за предыдущий день.\n'
+                           f'Актуальные данные необходимо предоставить сегодня до 12:00.\n'
+                           f'<a href=\"{spreadsheet}\">ССЫЛКА НА ТАБЛИЦУ</a>')
+                reply_markup = kb.requests_table
+                try:
+                    msg_to_del = requests_table_messages.get(chat_id)
+                    if msg_to_del is not None:
+                        await bot.delete_message(chat_id, msg_to_del)  # удаляем предыдущее сообщение, чтобы не спамить
+                    new_message = await bot.send_message(chat_id=chat_id, text=message, reply_markup=reply_markup,
+                                                         parse_mode='HTML', disable_web_page_preview=True)
+                    requests_table_messages[chat_id] = new_message.message_id  # сохраняем новое сообщение
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_requests_chat(chat_id)
+        else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
+            if chat_id in requests_table_messages:
+                del requests_table_messages[chat_id]

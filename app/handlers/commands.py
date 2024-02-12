@@ -11,8 +11,8 @@ import app.keyboards as kb
 from app.utils.queries import execute_query
 from app.utils.states import (NewResponsible, RemovingResponsible,
                               NewConstructionManager, RemovingConstructionManager,
-                              TableEditing, ReminderOff, ChangeBDays)
-from app.utils.utils import check_reminder_is_on, get_responsible, get_construction_managers
+                              TableEditing, RequestsTableEditing, ReminderOff, ChangeBDays)
+from app.utils.utils import check_reminder_is_on, check_requests_is_on, get_responsible, get_construction_managers
 
 commandsRouter = Router()
 
@@ -21,12 +21,6 @@ commandsRouter = Router()
 @commandsRouter.message(Command('start'))
 async def start(message: Message):
     await message.answer('Приветствую! Я буду помогать вам в процессе работы!')
-
-
-# Меню напоминания
-@commandsRouter.message(Command('reminder'))
-async def reminder(message: Message):
-    await message.answer('Что нужно сделать с напоминанием?', reply_markup=kb.reminder)
 
 
 @commandsRouter.message(Command('birthday'))
@@ -51,6 +45,75 @@ async def birthday_nochanges(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
+@commandsRouter.message(Command('requests'))
+async def requests(message: Message):
+    await message.answer('Что нужно сделать с напоминанием?', reply_markup=kb.requests)
+
+
+@commandsRouter.callback_query(F.data == 'requests_off')
+async def requests_off(callback: CallbackQuery):
+    execute_query(f'DELETE FROM chats_requests WHERE id = {callback.message.chat.id}')
+    if callback.message.text != 'Напоминание выключено.':
+        await callback.message.edit_text('Напоминание выключено.', reply_markup=kb.requests)
+    await callback.answer('')
+
+
+@commandsRouter.callback_query(F.data == 'requests_table_change')
+async def requests_table_change(callback: CallbackQuery, state: FSMContext):
+    chat_id = callback.message.chat.id
+    row = execute_query(f'SELECT spreadsheet FROM chats_requests WHERE id = {chat_id}')
+    if len(row) == 0:
+        await callback.message.edit_text('Включите напоминание, чтобы добавить таблицу', reply_markup=kb.requests)
+        await callback.answer('')
+    else:
+        spreadsheet = row[0][0]
+        if not bool(spreadsheet):
+            spreadsheet_state = 'Вы ещё не добавляли таблицу!'
+        else:
+            spreadsheet_state = f'Текущая таблица: {spreadsheet}'
+        await state.set_state(RequestsTableEditing.table)
+        await callback.message.edit_text(f'{spreadsheet_state}\nВведите ссылку на новую таблицу.', reply_markup=kb.cancel_table)
+        await callback.answer('')
+
+
+@commandsRouter.callback_query(RequestsTableEditing.table, F.data == 'cancel_table')
+async def requests_table_cancel(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('Отмена изменения таблицы', reply_markup=kb.requests)
+    await callback.answer('')
+    await state.clear()
+
+
+@commandsRouter.callback_query(RequestsTableEditing.table, F.data == 'delete_table')
+async def table_delete(callback: CallbackQuery, state: FSMContext):
+    chat_id = callback.message.chat.id
+    try:
+        execute_query(f'UPDATE chats_requests SET spreadsheet = null where id = {chat_id}')
+        await callback.message.edit_text('Ссылка на таблицу удалена', reply_markup=kb.requests)
+        await callback.answer('')
+    except sqlite3.Error:
+        await callback.message.edit_text('Не удалось удалить ссылку на таблицу', reply_markup=kb.requests)
+        await callback.answer('')
+    await state.clear()
+
+
+@commandsRouter.message(RequestsTableEditing.table)
+async def requests_table_apply(message: Message, state: FSMContext):
+    new_table = message.text.strip()
+    chat_id = message.chat.id
+    try:
+        execute_query(f'UPDATE chats_requests SET spreadsheet = "{new_table}" where id = {chat_id}')
+        await message.answer('Ссылка на таблицу обновлена', reply_markup=kb.requests)
+    except sqlite3.Error:
+        await message.answer('Не удалось обновить ссылку на таблицу')
+    await state.clear()
+
+
+# Меню напоминания
+@commandsRouter.message(Command('reminder'))
+async def reminder(message: Message):
+    await message.answer('Что нужно сделать с напоминанием?', reply_markup=kb.reminder)
+
+
 # Включить напоминание
 @commandsRouter.callback_query(F.data == 'reminder_on')
 async def reminder_on(callback: CallbackQuery):
@@ -72,7 +135,8 @@ async def reminder_on(callback: CallbackQuery):
 async def reminder_off(callback: CallbackQuery, state: FSMContext):
     chat_id = callback.message.chat.id
     if not check_reminder_is_on(chat_id):
-        await callback.message.edit_text('⚠️Напоминание ещё не было включено⚠️', reply_markup=kb.reminder)
+        if callback.message.text != '⚠️Напоминание ещё не было включено⚠️':
+            await callback.message.edit_text('⚠️Напоминание ещё не было включено⚠️', reply_markup=kb.reminder)
         await callback.answer('')
     else:
         await callback.message.edit_text('При отключении напоминания вся информация об ответственных и днях рождения будет удалена!\n'
@@ -318,7 +382,7 @@ async def construction_manager_remove_declined(callback: CallbackQuery, state: F
 @commandsRouter.callback_query(F.data == 'table_change')
 async def table_change(callback: CallbackQuery, state: FSMContext):
     chat_id = callback.message.chat.id
-    row = execute_query(f'SELECT spreadsheet FROM chats WHERE chats.id = {chat_id}')
+    row = execute_query(f'SELECT spreadsheet FROM chats WHERE id = {chat_id}')
     if len(row) == 0:
         await callback.message.edit_text('⚠️Включите напоминание, чтобы добавить таблицу⚠️', reply_markup=kb.reminder)
         await callback.answer('')

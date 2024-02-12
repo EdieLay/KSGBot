@@ -28,6 +28,9 @@ class RespCallbackFilter(BaseFilter):
         chat_id = callback.message.chat.id
         resp = get_responsible(chat_id)
         managers = get_construction_managers(chat_id)
+        if not resp and not managers:
+            resp = get_responsible(chat_id, True)
+            managers = get_construction_managers(chat_id, True)
         return username in resp or username in managers
 
 
@@ -40,6 +43,9 @@ class RespMessageFilter(BaseFilter):
         chat_id = message.chat.id
         resp = get_responsible(chat_id)
         managers = get_construction_managers(chat_id)
+        if not resp and not managers:
+            resp = get_responsible(chat_id, True)
+            managers = get_construction_managers(chat_id, True)
         print(username in resp or username in managers)
         return username in resp or username in managers
 
