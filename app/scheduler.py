@@ -11,23 +11,23 @@ scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 def add_default_jobs(bot):
     scheduler.add_job(d_rems.morning_plan, trigger='cron', day_of_week='mon-sat', hour='9', minute='30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.morning_plan, trigger='cron', day_of_week='mon-sat', hour='10-23', minute='0,30',
+    scheduler.add_job(d_rems.morning_plan, trigger='cron', day_of_week='mon-sat', hour='10-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.brigade_report, trigger='cron', day_of_week='mon-sat', hour='10-23', minute='0,30',
+    scheduler.add_job(d_rems.brigade_report, trigger='cron', day_of_week='mon-sat', hour='10-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.night_payment, trigger='cron', day_of_week='mon-sat', hour='13-23', minute='0,30',
+    scheduler.add_job(d_rems.night_payment, trigger='cron', day_of_week='mon-sat', hour='13-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.day_payment, trigger='cron', day_of_week='mon-sat', hour='17-23', minute='0,30',
+    scheduler.add_job(d_rems.day_payment, trigger='cron', day_of_week='mon-sat', hour='17-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-sat', hour='17', minute='30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-sat', hour='19-23', minute='0,30',
+    scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-sat', hour='19-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-sat', hour='18', minute='30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-sat', hour='19-23', minute='0,30',
+    scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-sat', hour='19-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.requests_table, trigger='cron', day_of_week='mon-sat', hour='11-23/3', minute='0',
+    scheduler.add_job(d_rems.requests_table, trigger='cron', day_of_week='mon-sat', hour='11-21/3', minute='0',
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(w_rems.table_update, trigger='cron', day_of_week='thu', hour='11-18/2', start_date=datetime.now(),
                       kwargs={'bot': bot})

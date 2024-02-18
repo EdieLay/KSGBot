@@ -109,7 +109,6 @@ async def tomorrow_plan_done(callback: CallbackQuery):
 
 @dailyRouter.callback_query(F.data == 'requests_table_done')
 async def requests_table_done(callback: CallbackQuery):
-    await callback.message.edit_text(callback.message.text + '\n(Таблица обновлена)')
     await callback.message.answer(f'{requests_controllers}\n'
                                   f'Таблица обновлена')
     await callback.answer('')
