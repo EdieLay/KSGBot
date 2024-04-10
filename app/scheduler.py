@@ -15,8 +15,8 @@ def add_default_jobs(bot):
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(d_rems.brigade_report, trigger='cron', day_of_week='mon-sat', hour='10-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.night_payment, trigger='cron', day_of_week='mon-sat', hour='13-21', minute='0,30',
-                      start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(d_rems.night_payment, trigger='cron', day_of_week='mon-sat', hour='13-21', minute='0,30',
+    #                  start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(d_rems.day_payment, trigger='cron', day_of_week='mon-sat', hour='17-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-sat', hour='17', minute='30',
