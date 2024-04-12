@@ -23,10 +23,10 @@ def add_default_jobs(bot):
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-sat', hour='19-21', minute='0,30',
                       start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-sat', hour='18', minute='30',
-                      start_date=datetime.now(), kwargs={'bot': bot})
-    scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-sat', hour='19-21', minute='0,30',
-                      start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-sat', hour='18', minute='30',
+    #                  start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(d_rems.tomorrow_plan, trigger='cron', day_of_week='mon-sat', hour='19-21', minute='0,30',
+    #                  start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(d_rems.requests_table, trigger='cron', day_of_week='mon-sat', hour='11-21/3', minute='0',
                       start_date=datetime.now(), kwargs={'bot': bot})
     scheduler.add_job(w_rems.table_update, trigger='cron', day_of_week='thu', hour='11-18/2', start_date=datetime.now(),
