@@ -39,8 +39,8 @@ def add_default_jobs(bot):
 
 
 def add_dev_jobs(bot):
-    scheduler.add_job(d_rems.requests_table, trigger='cron', day_of_week='mon-sat', minute='*',
-                      start_date=datetime.now(), kwargs={'bot': bot})
+    #scheduler.add_job(d_rems.requests_table, trigger='cron', day_of_week='mon-sat', minute='*',
+    #                  start_date=datetime.now(), kwargs={'bot': bot})
     # scheduler.add_job(d_rems.morning_plan, trigger='cron', day_of_week='mon-fri', minute='*',
     #                   start_date=datetime.now(), kwargs={'bot': bot})
     # scheduler.add_job(d_rems.brigade_report, trigger='cron', day_of_week='mon-fri', minute='*', second='10',
@@ -56,8 +56,8 @@ def add_dev_jobs(bot):
     # scheduler.add_job(d_rems.evening_plan, trigger='cron', day_of_week='mon-fri', hour='19-23', minute='*', second='55',
     #                   start_date=datetime.now(), kwargs={'bot': bot})
     # #scheduler.add_job(rem.brigade_report, trigger='cron', minute='*', start_date=datetime.now(), kwargs={'bot': bot})
-    # #scheduler.add_job(rem.new_work, trigger='cron', minute='*', start_date=datetime.now(),
-    # #                  kwargs={'bot': bot})
+    scheduler.add_job(w_rems.new_work, trigger='cron', minute='*', start_date=datetime.now(),
+                      kwargs={'bot': bot})
     # scheduler.add_job(w_rems.table_update, trigger='date', run_date=datetime.now() + timedelta(seconds=5), kwargs={'bot': bot})
     # # scheduler.add_job(rem.bd_today, trigger='date', run_date=datetime.now() + timedelta(seconds=15), kwargs={'bot': bot})
 

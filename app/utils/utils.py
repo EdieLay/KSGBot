@@ -1,6 +1,7 @@
 from aiogram.types import Message
 import aiogram.exceptions
 import sqlite3
+from aiogram import Bot
 
 from app.utils.queries import execute_query
 import app.keyboards as kb
@@ -83,3 +84,10 @@ async def remind_later(message: Message):
     resps = get_responsible(message.chat.id)
     await message.answer(f'@{" @".join(resps)}\n'
                    f'Уточните, пожалуйста, все ли рабочие заняли свои места сегодня?', reply_markup=kb.remind_later)
+
+
+async def delete_message(bot: Bot, chat_id, message_id):
+    try:
+        await bot.delete_message(chat_id, message_id)
+    except aiogram.exceptions.TelegramBadRequest:
+        print('Can not delete message. TelegramBadRequest')

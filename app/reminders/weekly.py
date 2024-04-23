@@ -6,7 +6,7 @@ import os.path
 
 import app.keyboards as kb
 from app.utils.queries import execute_query
-from app.utils.utils import get_responsible, delete_chat
+from app.utils.utils import get_responsible, delete_chat, delete_message
 
 table_messages = {}
 new_work_messages = {}
@@ -25,7 +25,7 @@ async def table_update(bot: Bot):
                 try:
                     message_to_delete = table_messages.get(chat_id)
                     if message_to_delete is not None:
-                        await bot.delete_message(chat_id, message_to_delete)  # удаляем предыдущее сообщение, чтобы не спамить
+                        await delete_message(bot, chat_id, message_to_delete)  # удаляем предыдущее сообщение, чтобы не спамить
                     new_message = await bot.send_message(chat_id=chat_id,
                                                          text=f'@{" @".join(resps)}\n'
                                                               f'Прошу обновить списки сотрудников на объекте.\n'
@@ -77,21 +77,18 @@ async def new_work(bot: Bot):
         if answered == 0:
             resps = get_responsible(chat_id)
             if len(resps) > 0:
-                resps_mes = f'@{" @".join(resps)} '
-            else:
-                resps_mes = ''
-            try:
-                message_to_delete = new_work_messages.get(chat_id)
-                if message_to_delete is not None:
-                    await bot.delete_message(chat_id, message_to_delete)  # удаляем предыдущее сообщение, чтобы не спамить
-                new_message = await bot.send_message(chat_id=chat_id,
-                                                     text=f'{resps_mes}\n'
-                                                          f'Уточните, пожалуйста, в ближайшее время планируется новый вид работ на объекте?\n'
-                                                          f'Нуждаетесь в поиске новых работников?',
-                                                     reply_markup=kb.new_work)
-                new_work_messages[chat_id] = new_message.message_id  # сохраняем новое сообщение
-            except aiogram.exceptions.TelegramForbiddenError:
-                delete_chat(chat_id)
+                try:
+                    message_to_delete = new_work_messages.get(chat_id)
+                    if message_to_delete is not None:
+                        await delete_message(bot, chat_id, message_to_delete)  # удаляем предыдущее сообщение, чтобы не спамить
+                    new_message = await bot.send_message(chat_id=chat_id,
+                                                        text=f'@{" @".join(resps)}\n'
+                                                            f'Уточните, пожалуйста, в ближайшее время планируется новый вид работ на объекте?\n'
+                                                            f'Нуждаетесь в поиске новых работников?',
+                                                        reply_markup=kb.new_work)
+                    new_work_messages[chat_id] = new_message.message_id  # сохраняем новое сообщение
+                except aiogram.exceptions.TelegramForbiddenError:
+                    delete_chat(chat_id)
         else:  # если уже ответили, то удалять сообщение не нужно, поэтому убираем из словаря
             if chat_id in new_work_messages:
                 del new_work_messages[chat_id]
